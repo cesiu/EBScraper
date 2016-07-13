@@ -8,6 +8,14 @@ import string
 import pickle
 import os
 
+# Represents one entry in an index.
+class IndexEntry:
+    def __init__(self, topic_id, title, author, img_url):
+        self.topic_id = topic_id
+        self.title = title
+        self.author = author
+        self.img_url = img_url
+
 def main():
     # Maps the subforum names to their id numbers.
     SUBFORUM_IDS = {
@@ -16,31 +24,33 @@ def main():
     # The base forum URL.
     base_url = "http://www.eurobricks.com/forum/index.php?showforum="
 
-    # Load the list of already-indexed topic ids.
-    old_urls = {}
+    # Load the list of already-indexed topics.
+    old_entries = {}
     if "indexed.p" in os.listdir(os.getcwd()):
-        old_urls = pickle.load(open("indexed.p", "rb"))
+        old_entries = pickle.load(open("indexed.p", "rb"))
 
     # For every page:
     for start in range(0, 30, 30): 
         # Construct the URL and scrape the page.
-        urls = scrape_forum_page("%s%s&st=%s" 
+        entries = scrape_forum_page("%s%s&st=%s" 
          % (base_url, SUBFORUM_IDS["StarWars"], str(start)))
         
         # Find the topics that haven't been indexed.
-        for url in urls:
-            if url in old_urls:
-                print "%s is already indexed." % url
+        for entry in entries:
+            if entry.topic_id in old_entries:
+                print "%s (%s) by %s already indexed." \
+                      % (entry.title, entry.topic_id, entry.author)
             else:
-                print "%s needs to be indexed." % url
-                old_urls[url] = True
+                print "%s (%s) by %s needs indexing." \
+                      % (entry.title, entry.topic_id, entry.author)
+                old_entries[entry.topic_id] = entry
 
     # Save the newly indexed topics.
-    pickle.dump(old_urls, open("indexed.p", "wb"))
+    pickle.dump(old_entries, open("indexed.p", "wb"))
 
 # Scrapes a page of a forum to find all the MOC topics.
 # url - the url of the forum page
-# returns a list of topic ids
+# returns a list of IndexEntries
 def scrape_forum_page(url):
     ret_urls = []
     # Load the page and initialize the parser.
@@ -53,6 +63,9 @@ def scrape_forum_page(url):
     for topic in soup.find_all(class_="col_f_content"):
         title = topic.find(itemprop="name").string
         link = topic.find(class_="topic_title")["href"]
+        # The author is the first string in this span.
+        author = ' '.join(topic.find(class_="desc lighter blend_links") \
+                          .contents[0].split()[2:-1])
         # If the tag is used as badge, it isn't wrapped in any tags.
         tags = [tag.contents[0].string if tag.find("span") else tag.string \
                 for tag in topic.find_all(attrs = {"data-tooltip": True})]
@@ -63,7 +76,8 @@ def scrape_forum_page(url):
             and not is_pinned(topic)):
             #print title
             #print tags
-            ret_urls.append(link.split('=')[-1])
+            ret_urls.append(IndexEntry(str(link.split('=')[-1]), str(title), \
+                                       str(author), None))
 
     return ret_urls
 
