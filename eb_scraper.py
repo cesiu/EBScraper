@@ -1,10 +1,12 @@
-# An experiment in using BeautifulSoup to scrape selected threads from forums.
+# An experiment in using Beautiful Soup to scrape selected threads from a forum.
 # author: Christopher (cesiu)
 # version: 13 July 2016
 
 from bs4 import BeautifulSoup
 import urllib2
 import string
+import pickle
+import os
 
 def main():
     # Maps the subforum names to their id numbers.
@@ -14,15 +16,31 @@ def main():
     # The base forum URL.
     base_url = "http://www.eurobricks.com/forum/index.php?showforum="
 
+    # Load the list of already-indexed topic ids.
+    old_urls = {}
+    if "indexed.p" in os.listdir(os.getcwd()):
+        old_urls = pickle.load(open("indexed.p", "rb"))
+
     # For every page:
     for start in range(0, 30, 30): 
         # Construct the URL and scrape the page.
-        print scrape_forum_page("%s%s&st=%s" 
+        urls = scrape_forum_page("%s%s&st=%s" 
          % (base_url, SUBFORUM_IDS["StarWars"], str(start)))
+        
+        # Find the topics that haven't been indexed.
+        for url in urls:
+            if url in old_urls:
+                print "%s is already indexed." % url
+            else:
+                print "%s needs to be indexed." % url
+                old_urls[url] = True
+
+    # Save the newly indexed topics.
+    pickle.dump(old_urls, open("indexed.p", "wb"))
 
 # Scrapes a page of a forum to find all the MOC topics.
 # url - the url of the forum page
-# returns a list of topic URLs
+# returns a list of topic ids
 def scrape_forum_page(url):
     ret_urls = []
     # Load the page and initialize the parser.
@@ -43,10 +61,9 @@ def scrape_forum_page(url):
         if (("moc" in string.lower(title) or has_tag(tags, "moc")) \
             and not ("wip" in string.lower(title) or has_tag(tags, "wip")) \
             and not is_pinned(topic)):
-            print"\n-----\n"
-            print title
-            print tags
-            ret_urls.append(link)
+            #print title
+            #print tags
+            ret_urls.append(link.split('=')[-1])
 
     return ret_urls
 
