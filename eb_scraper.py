@@ -103,10 +103,12 @@ def format_title(title):
     ret_str = []
     tags_done = False
 
-    # Remove every token at the beginning of the string that is enclosed in
-    # brackets or parens. 
+    # Remove every token at the beginning of the string that includes brackets,
+    # parens, or a non-number followed by a colon. (Ignore numbers followed by
+    # colons because some people put a scale at the start of their titles, e.g., 
+    # "1:40 Mini X-wing".) 
     for token in title.split():
-        if not tags_done and re.search("[\[\(].*[\]\)]", token) == None:
+        if not tags_done and re.search("[\[\]\(\)]|[\D]:", token) == None:
             tags_done = True
         if tags_done:
             ret_str.append(token)
