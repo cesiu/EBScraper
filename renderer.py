@@ -1,6 +1,6 @@
 # Renders a pickled index.
 # author: Christopher (cesiu)
-# version: 13 July 2016
+# version: 0.1
 
 from bs4 import BeautifulSoup
 import urllib2

@@ -1,6 +1,6 @@
 # An experiment in using Beautiful Soup to scrape selected threads from a forum.
 # author: Christopher (cesiu)
-# version: 13 July 2016
+# version: 0.1
 
 from bs4 import BeautifulSoup
 import urllib2
