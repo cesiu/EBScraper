@@ -9,7 +9,7 @@ def main():
     base_url = "http://www.eurobricks.com/forum/index.php?showforum=86"
 
     for start in range(0, 30, 30): 
-        page = urllib2.urlopen(base_url + "&st=" + str(start))
+        page = urllib2.urlopen("%s&st=%s" % (base_url, str(start)))
         soup = BeautifulSoup(page.read(), "lxml")
 
         print soup.title
