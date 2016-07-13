@@ -6,13 +6,18 @@ from bs4 import BeautifulSoup
 import urllib2
 
 def main():
-    page = urllib2.urlopen("http://www.eurobricks.com/forum")
-    soup = BeautifulSoup(page.read(), "lxml")
+    base_url = "http://www.eurobricks.com/forum/index.php?showforum=86"
 
-    print soup.title
+    for start in range(0, 30, 30): 
+        page = urllib2.urlopen(base_url + "&st=" + str(start))
+        soup = BeautifulSoup(page.read(), "lxml")
 
-    for link in soup.find_all('a'):
-        print link.get('href')
+        print soup.title
+        
+        for topic in soup.find_all(class_="col_f_content"):
+            print "\n-----\n"
+            print topic.find(itemprop="name").string
+            print topic.find(class_="topic_title")["href"]
 
 if __name__ == "__main__":
     main()
