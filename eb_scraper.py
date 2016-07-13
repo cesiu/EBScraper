@@ -11,5 +11,8 @@ def main():
 
     print soup.title
 
+    for link in soup.find_all('a'):
+        print link.get('href')
+
 if __name__ == "__main__":
     main()
