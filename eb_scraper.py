@@ -16,42 +16,51 @@ def main():
 
     # For every page:
     for start in range(0, 30, 30): 
-        # Construct the URL and open the page.
-        page = urllib2.urlopen("%s%s&st=%s" \
-               % (base_url, SUBFORUM_IDS["StarWars"], str(start)))
-        # Initialize a Beautiful Soup parser.
-        soup = BeautifulSoup(page.read(), "lxml")
+        # Construct the URL and scrape the page.
+        print scrape_forum_page("%s%s&st=%s" 
+         % (base_url, SUBFORUM_IDS["StarWars"], str(start)))
 
-        print "Scraping %s..." % soup.title.string
+# Scrapes a page of a forum to find all the MOC topics.
+# url - the url of the forum page
+# returns a list of topic URLs
+def scrape_forum_page(url):
+    ret_urls = []
+    # Load the page and initialize the parser.
+    page = urllib2.urlopen(url)
+    soup = BeautifulSoup(page.read(), "lxml")
+
+    print "Scraping %s..." % soup.title.string
         
-        # For every topic on that page:
-        for topic in soup.find_all(class_="col_f_content"):
-            title = topic.find(itemprop="name").string
-            link = topic.find(class_="topic_title")["href"]
-            # If the tag is used as badge, it isn't wrapped in any tags.
-            tags = [tag.contents[0].string if tag.find("span") else tag.string \
-                    for tag in topic.find_all(attrs = {"data-tooltip": True})]
+    # For every topic on that page:
+    for topic in soup.find_all(class_="col_f_content"):
+        title = topic.find(itemprop="name").string
+        link = topic.find(class_="topic_title")["href"]
+        # If the tag is used as badge, it isn't wrapped in any tags.
+        tags = [tag.contents[0].string if tag.find("span") else tag.string \
+                for tag in topic.find_all(attrs = {"data-tooltip": True})]
 
-            # If the topic is a non-pinned, non-WIP MOC:
-            if (("moc" in string.lower(title) or hasTag(tags, "moc")) \
-                and not ("wip" in string.lower(title) or hasTag(tags, "wip")) \
-                and not isPinned(topic)):
-                print"\n-----\n"
-                print title
-                print link
-                print tags
+        # If the topic is a non-pinned, non-WIP MOC:
+        if (("moc" in string.lower(title) or has_tag(tags, "moc")) \
+            and not ("wip" in string.lower(title) or has_tag(tags, "wip")) \
+            and not is_pinned(topic)):
+            print"\n-----\n"
+            print title
+            print tags
+            ret_urls.append(link)
+
+    return ret_urls
 
 # Checks to see if a topic has a tag.
 # tags - a list of tags, each of which is a string
 # key_tag - the tag to search for, a lowercase string
 # returns True or False
-def hasTag(tags, key_tag):
+def has_tag(tags, key_tag):
     return key_tag in (string.lower(raw_tag.strip()) for raw_tag in tags)
 
 # Checks to see if a topic is pinned.
 # topic - the Beautiful Soup tag object containing the topic
 # returns True or False
-def isPinned(topic):
+def is_pinned(topic):
     return "Pinned" in [badge.string for badge in \
             topic.find_all(class_="ipsBadge ipsBadge_green")]
 
