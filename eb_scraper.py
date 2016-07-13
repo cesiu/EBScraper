@@ -7,6 +7,7 @@ import urllib2
 import string
 import pickle
 import os
+import re
 
 # Represents one entry in an index.
 class IndexEntry:
@@ -76,8 +77,8 @@ def scrape_forum_page(url):
             and not is_pinned(topic)):
             #print title
             #print tags
-            ret_urls.append(IndexEntry(str(link.split('=')[-1]), str(title), \
-                                       str(author), None))
+            ret_urls.append(IndexEntry(str(link.split('=')[-1]), \
+             str(format_title(title)), str(author), None))
 
     return ret_urls
 
@@ -94,6 +95,23 @@ def has_tag(tags, key_tag):
 def is_pinned(topic):
     return "Pinned" in [badge.string for badge in \
             topic.find_all(class_="ipsBadge ipsBadge_green")]
+
+# Attempts to remove tags from titles.
+# title - the string to remove tags from
+# returns a string
+def format_title(title):
+    ret_str = []
+    tags_done = False
+
+    # Remove every token at the beginning of the string that is enclosed in
+    # brackets or parens. 
+    for token in title.split():
+        if not tags_done and re.search("[\[\(].*[\]\)]", token) == None:
+            tags_done = True
+        if tags_done:
+            ret_str.append(token)
+
+    return ' '.join(ret_str)
 
 if __name__ == "__main__":
     main()
