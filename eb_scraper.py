@@ -1,8 +1,9 @@
-# An experiment in using Beautiful Soup to scrape selected threads from a forum.
+# An experiment using Beautiful Soup to scrape selected threads from a forum.
 # author: Christopher (cesiu)
 # version: 0.1
 
 from bs4 import BeautifulSoup
+from PIL import Image
 import urllib
 import urllib2
 import string
@@ -40,7 +41,7 @@ def main():
         entries = scrape_forum_page("%s?showforum=%s&st=%s" 
          % (BASE_URL, SUBFORUM_IDS["StarWars"], str(start)))
         
-        # Find the topics that haven't been indexed.
+        # Find the MOCs that haven't been indexed and scrape them.
         for entry in entries:
             if entry.topic_id in old_entries:
                 print "%s (%s) by %s already indexed." \
@@ -48,8 +49,8 @@ def main():
             else:
                 print "%s (%s) by %s needs indexing." \
                       % (entry.title, entry.topic_id, entry.author)
+                scrape_topic(entry.topic_id)
                 old_entries[entry.topic_id] = entry
-            scrape_topic(entry.topic_id)
 
     # Save the newly indexed topics.
     pickle.dump(old_entries, open("indexed.p", "wb"))
@@ -62,7 +63,6 @@ def scrape_forum_page(url):
     # Load the page and initialize the parser.
     page = urllib2.urlopen(url)
     soup = BeautifulSoup(page.read())
-
     print "Scraping %s..." % soup.title.string
         
     # For every topic on that page:
@@ -76,12 +76,10 @@ def scrape_forum_page(url):
         tags = [tag.contents[0].string if tag.find("span") else tag.string \
                 for tag in topic.find_all(attrs = {"data-tooltip": True})]
 
-        # If the topic is a non-pinned, non-WIP MOC:
+        # Grab all the non-pinned, non-WIP, MOC topics:
         if (("moc" in string.lower(title) or has_tag(tags, "moc")) \
             and not ("wip" in string.lower(title) or has_tag(tags, "wip")) \
             and not is_pinned(topic)):
-            #print title
-            #print tags
             ret_urls.append(IndexEntry(str(link.split('=')[-1]), \
              str(format_title(title)), str(author), None))
 
@@ -94,7 +92,6 @@ def scrape_topic(topic_id):
     # Load the page and initialize the parser.
     page = urllib2.urlopen("%s?showtopic=%s" % (BASE_URL, topic_id))
     soup = BeautifulSoup(page.read())
-
     print "   Scraping %s..." % soup.title.string
 
     # Find the first non-emoticon image in the first post.
@@ -103,10 +100,25 @@ def scrape_topic(topic_id):
     # Define a name for the image, keeping the extension.
     img_name = "%s/%s.%s" % (os.getcwd(), topic_id, img_url.split(".")[-1])
 
-    # Download the image.
+    # Download and open the image.
     (filename, header) = urllib.urlretrieve(img_url, img_name)
-
     print "   Downloaded %s." % filename
+    img = Image.open(img_name)
+
+    # Crop the image to a centered square and resize.
+    if img.size[0] > img.size[1]:
+        img = img.crop(( \
+         (img.size[0] - img.size[1]) / 2, 0, \
+         (img.size[0] - img.size[1]) / 2 + img.size[1], img.size[1] \
+        ))
+    else:
+        img = img.crop(( \
+         0, (img.size[1] - img.size[0]) / 2, \
+         img.size[0], (img.size[1] - img.size[0]) / 2 + img.size[0] \
+        ))
+    img.thumbnail((100,100))
+    # Save the thumbnail as a PNG with a different name.
+    img.save("%s/%sthumb.png" % (os.getcwd(), topic_id), "PNG")
 
 # Checks to see if a topic has a tag.
 # tags - a list of tags, each of which is a string
@@ -131,7 +143,7 @@ def format_title(title):
 
     # Remove every token at the beginning of the string that includes brackets,
     # parens, or a non-number followed by a colon. (Ignore numbers followed by
-    # colons because some people put a scale at the start of their titles, e.g., 
+    # colons because some people like to put a scale in their titles, e.g., 
     # "1:40 Mini X-wing".) 
     for token in title.split():
         if not tags_done and re.search("[\[\]\(\)]|[\D]:", token) == None:
