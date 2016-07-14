@@ -124,9 +124,12 @@ def scrape_topic(topic_id):
     img.save(img_name, "PNG")
 
     # Upload the image and save the URL.
-    os.system("./imguru %s > imgurOut" % img_name)
-    with open("imgurOut", 'r') as imgur_file:
-        return imgur_file.readline().strip()
+    while True:
+        os.system("./imguru %s > imgurOut" % img_name)
+        with open("imgurOut", 'r') as imgur_file:
+            img_url = imgur_file.readline().strip()
+            if "http://i.imgur.com/" in img_url:
+                return img_url
 
 # Checks to see if a topic has a tag.
 # tags - a list of tags, each of which is a string
