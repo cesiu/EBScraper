@@ -9,6 +9,7 @@ import urllib2
 import string
 import pickle
 import os
+import time
 from eb_scraper import IndexEntry
 
 def main():
@@ -30,9 +31,17 @@ def main():
             browser.get("http://www.eurobricks.com/forum/index.php?app=core&module=global&section=login")
             browser.find_element_by_name("ips_username").send_keys(username)
             browser.find_element_by_name("ips_password").send_keys(password + Keys.RETURN)
+            browser.find_element_by_xpath("//a[@href='http://www.eurobricks.com/forum/index.php?act=idx']").click()
+            browser.find_element_by_xpath("//a[@href='http://www.eurobricks.com/forum/index.php?showforum=125']").click()
+            browser.find_element_by_xpath("//a[@href='http://www.eurobricks.com/forum/index.php?showtopic=136468']").click()
+            browser.find_element_by_xpath("//a[@title='Reply to this topic']").click()
+            browser.find_element_by_xpath("//a[@title='Toggle editing mode']").click()
+            time.sleep(1)
+            browser.find_element_by_xpath("//textarea[@class='cke_source cke_enable_context_menu']").send_keys(body)
+            browser.find_element_by_name("dosubmit").click()
 
-            # browser.find_element_by_link_text("Sign Out").click()
-            # browser.close()
+            browser.find_element_by_link_text("Sign Out").click()
+            browser.close()
 
 if __name__ == "__main__":
     main()
