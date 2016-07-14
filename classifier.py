@@ -54,7 +54,7 @@ class Classifier:
     def is_significant(self, token):
         return len(token) > 1 and not token in self.common and not \
                token.isdigit() and not '\\x' in token and not \
-               "http//www" in token and not "https//www" in token 
+               "http//" in token and not "https//" in token 
 
     # Classifies a block of text.
     # text - the block to be classified
@@ -92,20 +92,32 @@ class Classifier:
                 self.keywords[token].frequencies[result] += 1
         return result
 
+    # Removes insignificant tokens from the keyword dictionary.
+    # returns the new dictionary
     def prune(self):
+        # Make a shallow copy of the dictionary.
         ret_dict = dict(self.keywords)
+        
+        # Fetch the frequencies of each token.
         for token, frequencies in self.keywords.iteritems():
             values = frequencies.frequencies.values()
+            # If there are more than two non-zero values, don't consider the
+            # zeroes.
+            while 0 < values.count(0) < 4:
+                values.remove(0)
+
+            # If the variance is less than a quarter of the sum (I made up this
+            # metric by eyeballing existing values...), remove the token 
+            # (assume it's just generally common among all topics). 
             mean = float(sum(values)) / len(values)
-            variance = float(sum([(value - mean) ** 2 for value in values])) / len(values)
+            variance = float(sum([(value - mean) ** 2 for value in values])) \
+                       / len(values)
             if variance < float(sum(values)) / 4:
                 del ret_dict[token]
-            else:
-                print token, str(values), str(mean), str(variance)
         return ret_dict
 
     def __exit__(self, exc_type, exc_value, traceback):
-        pickle.dump(self.keywords, open("keywords.p", "wb"))
+        pickle.dump(self.prune(), open("keywords.p", "wb"))
 
 if __name__ == "__main__":
     with Classifier() as c:
