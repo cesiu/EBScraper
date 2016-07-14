@@ -54,7 +54,7 @@ class Classifier:
     def is_significant(self, token):
         return len(token) > 1 and not token in self.common and not \
                token.isdigit() and not '\\x' in token and not \
-               "http//www" in token 
+               "http//www" in token and not "https//www" in token 
 
     # Classifies a block of text.
     # text - the block to be classified
@@ -92,10 +92,21 @@ class Classifier:
                 self.keywords[token].frequencies[result] += 1
         return result
 
+    def prune(self):
+        ret_dict = dict(self.keywords)
+        for token, frequencies in self.keywords.iteritems():
+            values = frequencies.frequencies.values()
+            mean = float(sum(values)) / len(values)
+            variance = float(sum([(value - mean) ** 2 for value in values])) / len(values)
+            if variance < float(sum(values)) / 4:
+                del ret_dict[token]
+            else:
+                print token, str(values), str(mean), str(variance)
+        return ret_dict
+
     def __exit__(self, exc_type, exc_value, traceback):
         pickle.dump(self.keywords, open("keywords.p", "wb"))
 
 if __name__ == "__main__":
     with Classifier() as c:
-        while True:
-            print c.is_significant(raw_input("Enter text: "))
+        c.prune()
