@@ -3,11 +3,15 @@
 # version: 0.1
 
 from bs4 import BeautifulSoup
+import urllib
 import urllib2
 import string
 import pickle
 import os
 import re
+
+# The base forum URL.
+BASE_URL = "http://www.eurobricks.com/forum/index.php"
 
 # Represents one entry in an index.
 class IndexEntry:
@@ -21,9 +25,9 @@ def main():
     # Maps the subforum names to their id numbers.
     SUBFORUM_IDS = {
         "StarWars": "86",
+        "WattosJunkyard": "114",
+        "NarEurbrikka": "175",
     }
-    # The base forum URL.
-    base_url = "http://www.eurobricks.com/forum/index.php?showforum="
 
     # Load the list of already-indexed topics.
     old_entries = {}
@@ -33,8 +37,8 @@ def main():
     # For every page:
     for start in range(0, 30, 30): 
         # Construct the URL and scrape the page.
-        entries = scrape_forum_page("%s%s&st=%s" 
-         % (base_url, SUBFORUM_IDS["StarWars"], str(start)))
+        entries = scrape_forum_page("%s?showforum=%s&st=%s" 
+         % (BASE_URL, SUBFORUM_IDS["StarWars"], str(start)))
         
         # Find the topics that haven't been indexed.
         for entry in entries:
@@ -45,6 +49,7 @@ def main():
                 print "%s (%s) by %s needs indexing." \
                       % (entry.title, entry.topic_id, entry.author)
                 old_entries[entry.topic_id] = entry
+            scrape_topic(entry.topic_id)
 
     # Save the newly indexed topics.
     pickle.dump(old_entries, open("indexed.p", "wb"))
@@ -56,7 +61,7 @@ def scrape_forum_page(url):
     ret_urls = []
     # Load the page and initialize the parser.
     page = urllib2.urlopen(url)
-    soup = BeautifulSoup(page.read(), "lxml")
+    soup = BeautifulSoup(page.read())
 
     print "Scraping %s..." % soup.title.string
         
@@ -81,6 +86,27 @@ def scrape_forum_page(url):
              str(format_title(title)), str(author), None))
 
     return ret_urls
+
+# Scrapes a topic and saves the first image.
+# topic_id - the id of the topic
+# 
+def scrape_topic(topic_id):
+    # Load the page and initialize the parser.
+    page = urllib2.urlopen("%s?showtopic=%s" % (BASE_URL, topic_id))
+    soup = BeautifulSoup(page.read())
+
+    print "   Scraping %s..." % soup.title.string
+
+    # Find the first non-emoticon image in the first post.
+    img_url = soup.find(itemprop="commentText") \
+                  .find("img", alt="Posted Image")["src"]
+    # Define a name for the image, keeping the extension.
+    img_name = "%s/%s.%s" % (os.getcwd(), topic_id, img_url.split(".")[-1])
+
+    # Download the image.
+    (filename, header) = urllib.urlretrieve(img_url, img_name)
+
+    print "   Downloaded %s." % filename
 
 # Checks to see if a topic has a tag.
 # tags - a list of tags, each of which is a string

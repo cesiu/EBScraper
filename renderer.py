@@ -3,6 +3,7 @@
 # version: 0.1
 
 from bs4 import BeautifulSoup
+from selenium import webdriver
 import urllib2
 import string
 import pickle
