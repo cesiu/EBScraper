@@ -3,6 +3,8 @@
 # version: 0.1
 
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 from PIL import Image
 import urllib
 import urllib2
@@ -49,7 +51,7 @@ def main():
             else:
                 print "%s (%s) by %s needs indexing." \
                       % (entry.title, entry.topic_id, entry.author)
-                scrape_topic(entry.topic_id)
+                entry.img_url = scrape_topic(entry.topic_id)
                 old_entries[entry.topic_id] = entry
 
     # Save the newly indexed topics.
@@ -87,7 +89,7 @@ def scrape_forum_page(url):
 
 # Scrapes a topic and saves the first image.
 # topic_id - the id of the topic
-# 
+# returns the URL of the thumbnail generated for the topic
 def scrape_topic(topic_id):
     # Load the page and initialize the parser.
     page = urllib2.urlopen("%s?showtopic=%s" % (BASE_URL, topic_id))
@@ -118,7 +120,13 @@ def scrape_topic(topic_id):
         ))
     img.thumbnail((100,100))
     # Save the thumbnail as a PNG with a different name.
-    img.save("%s/%sthumb.png" % (os.getcwd(), topic_id), "PNG")
+    img_name = "%s/%sthumb.png" % (os.getcwd(), topic_id)
+    img.save(img_name, "PNG")
+
+    # Upload the image and save the URL.
+    os.system("./imguru %s > imgurOut" % img_name)
+    with open("imgurOut", 'r') as imgur_file:
+        return imgur_file.readline().strip()
 
 # Checks to see if a topic has a tag.
 # tags - a list of tags, each of which is a string
