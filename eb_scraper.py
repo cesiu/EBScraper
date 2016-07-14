@@ -113,7 +113,10 @@ def scrape_topic(topic_id, classifier = None):
     soup = BeautifulSoup(page.read())
     print "   Scraping %s..." % soup.title.string
 
-    category = classifier.check(soup.find(itemprop="commentText").getText() \
+    # Classify the topic, giving the title ten times more weight than the first
+    # post's content.
+    category = classifier.check(((soup.find(class_="ipsType_pagetitle").string\
+               + " ") * 10 + soup.find(itemprop="commentText").getText())\
                .encode('utf-8'))
 
     if "-i" in argv:
