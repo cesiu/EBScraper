@@ -3,9 +3,7 @@
 # version: 0.1
 
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from PIL import Image
+from sys import argv
 import urllib
 import urllib2
 import string
@@ -13,16 +11,26 @@ import pickle
 import os
 import re
 
+try:
+    from PIL import Image
+    from selenium import webdriver
+    from selenium.webdriver.common.keys import Keys
+except:
+    if "-i" in argv:
+        argv.remove("-i")
+        print "Selenium or Pillow not installed. Not generating thumbnails."
+
 # The base forum URL.
 BASE_URL = "http://www.eurobricks.com/forum/index.php"
 
 # Represents one entry in an index.
 class IndexEntry:
-    def __init__(self, topic_id, title, author, img_url):
+    def __init__(self, topic_id, title, author):
         self.topic_id = topic_id
         self.title = title
         self.author = author
-        self.img_url = img_url
+        self.img_url = ""
+        self.category = "unknown"
 
 def main():
     # Maps the subforum names to their id numbers.
@@ -32,10 +40,12 @@ def main():
         "NarEurbrikka": "175",
     }
 
-    # Load the list of already-indexed topics.
+    # Load the dictionary of already-indexed topics.
     old_entries = {}
     if "indexed.p" in os.listdir(os.getcwd()):
         old_entries = pickle.load(open("indexed.p", "rb"))
+    # Create the dictionary of newly-indexed topics.
+    new_entries = {}
 
     # For every page:
     for start in range(0, 30, 30): 
@@ -51,11 +61,14 @@ def main():
             else:
                 print "%s (%s) by %s needs indexing." \
                       % (entry.title, entry.topic_id, entry.author)
-                entry.img_url = scrape_topic(entry.topic_id)
-                old_entries[entry.topic_id] = entry
+                if "-i" in argv:
+                    entry.img_url = scrape_topic(entry.topic_id)
+                old_entries[entry.topic_id] = True
+                new_entries[entry.topic_id] = entry
 
-    # Save the newly indexed topics.
+    # Save the updated dictionaries.
     pickle.dump(old_entries, open("indexed.p", "wb"))
+    pickle.dump(new_entries, open("to_render.p", "wb"))
 
 # Scrapes a page of a forum to find all the MOC topics.
 # url - the url of the forum page
@@ -83,7 +96,7 @@ def scrape_forum_page(url):
             and not ("wip" in string.lower(title) or has_tag(tags, "wip")) \
             and not is_pinned(topic)):
             ret_urls.append(IndexEntry(str(link.split('=')[-1]), \
-             str(format_title(title)), str(author), None))
+             str(format_title(title)), str(author)))
 
     return ret_urls
 
