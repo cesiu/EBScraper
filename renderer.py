@@ -25,8 +25,23 @@ def main():
         base_url = "http://www.eurobricks.com/forum/index.php?showtopic="
         body = "[url=\"https://github.com/cesiu/EBScraper\"]https://github.com/cesiu/EBScraper[/url]\n\n"
 
+        sections = {"OT": "", "PT": "", "CW": "", "EU": "", "ST": "", "OR": ""}
+
         for key, entry in entries.iteritems():
-            body += "[url=\"%s%s\"][img]%s[/img][/url] [url=\"%s%s\"][i]%s[/i][/url], by %s\n\n" % (base_url, entry.topic_id, entry.img_url, base_url, entry.topic_id, entry.title, entry.author)
+            sections[entry.category] += "[url=\"%s%s\"][img]%s[/img][/url] [url=\"%s%s\"][i]%s[/i][/url], by %s\n\n" % (base_url, entry.topic_id, entry.img_url, base_url, entry.topic_id, entry.title, entry.author)
+
+        if sections["OR"]:
+            body += "[size=5]Old Republic:[/size][hr]\n" + sections["OR"]
+        if sections["PT"]:
+            body += "[size=5]Prequel Trilogy:[/size][hr]\n" + sections["PT"]
+        if sections["CW"]:
+            body += "[size=5]Clone Wars:[/size][hr]\n" + sections["CW"]
+        if sections["OT"]:
+            body += "[size=5]Original Trilogy:[/size][hr]\n" + sections["OT"]
+        if sections["EU"]:
+            body += "[size=5]Expanded Universe:[/size][hr]\n" + sections["EU"]
+        if sections["ST"]:
+            body += "[size=5]Sequel Trilogy:[/size][hr]\n" + sections["ST"]
 
         print body
 

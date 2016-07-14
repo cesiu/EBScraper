@@ -113,7 +113,8 @@ def scrape_topic(topic_id, classifier = None):
     soup = BeautifulSoup(page.read())
     print "   Scraping %s..." % soup.title.string
 
-    category = classifier.check(str(soup.find(itemprop="commentText").getText()))
+    category = classifier.check(soup.find(itemprop="commentText").getText() \
+               .encode('utf-8'))
 
     if "-i" in argv:
         # Find the first non-emoticon image in the first post.
