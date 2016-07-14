@@ -3,6 +3,7 @@
 # version: 0.1
 
 from sys import argv
+from re import sub
 import string
 import pickle
 import os
@@ -47,6 +48,14 @@ class Classifier:
          "should", "will", "would"]])
         return self
 
+    # Determines if a word is significant enough to be considered.
+    # token - the word
+    # returns True or False
+    def is_significant(self, token):
+        return len(token) > 1 and not token in self.common and not \
+               token.isdigit() and not '\\x' in token and not \
+               "http//www" in token 
+
     # Classifies a block of text.
     # text - the block to be classified
     # returns the classification, a string
@@ -56,10 +65,9 @@ class Classifier:
 
         # For each word in the block: 
         for token in text.split():
-            token = token.lower()
+            token = sub("[().,:!'\";-]", '', token.lower())
             # Ignore short and common words.
-            if len(token) > 1 and not token in self.common \
-               and not token.replace('.','').isdigit():
+            if self.is_significant(token):
                 # If we've seen the word before, note how often it's used for
                 # each classification.
                 if token in self.keywords:
@@ -79,9 +87,8 @@ class Classifier:
 
         # Update the frequencies once we know the correct classification.
         for token in text.split():
-            token = token.lower()
-            if len(token) > 1 and not token in self.common \
-               and not token.replace('.','').isdigit():
+            token = sub("[().,:!'\";-]", '', token.lower())
+            if self.is_significant(token):
                 self.keywords[token].frequencies[result] += 1
         return result
 
@@ -91,4 +98,4 @@ class Classifier:
 if __name__ == "__main__":
     with Classifier() as c:
         while True:
-            c.check(raw_input("Enter text: "))
+            print c.is_significant(raw_input("Enter text: "))
