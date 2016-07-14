@@ -2,7 +2,6 @@
 # author: Christopher (cesiu)
 # version: 0.1
 
-from eb_scraper import IndexEntry
 from sys import argv
 import string
 import pickle
@@ -57,8 +56,10 @@ class Classifier:
 
         # For each word in the block: 
         for token in text.split():
+            token = token.lower()
             # Ignore short and common words.
-            if len(token) > 1 and not token in self.common:
+            if len(token) > 1 and not token in self.common \
+               and not token.replace('.','').isdigit():
                 # If we've seen the word before, note how often it's used for
                 # each classification.
                 if token in self.keywords:
@@ -78,7 +79,9 @@ class Classifier:
 
         # Update the frequencies once we know the correct classification.
         for token in text.split():
-            if len(token) > 1 and not token in self.common:
+            token = token.lower()
+            if len(token) > 1 and not token in self.common \
+               and not token.replace('.','').isdigit():
                 self.keywords[token].frequencies[result] += 1
         return result
 

@@ -4,6 +4,7 @@
 
 from bs4 import BeautifulSoup
 from sys import argv
+from classifier import *
 import urllib
 import urllib2
 import string
@@ -47,24 +48,25 @@ def main():
     # Create the dictionary of newly-indexed topics.
     new_entries = {}
 
-    # For every page:
-    for start in range(0, 30, 30): 
-        # Construct the URL and scrape the page.
-        entries = scrape_forum_page("%s?showforum=%s&st=%s" 
-         % (BASE_URL, SUBFORUM_IDS["StarWars"], str(start)))
+    with Classifier() as classifier:
+        # For every page:
+        for start in range(0, 30, 30): 
+            # Construct the URL and scrape the page.
+            entries = scrape_forum_page("%s?showforum=%s&st=%s" 
+             % (BASE_URL, SUBFORUM_IDS["StarWars"], str(start)))
         
-        # Find the MOCs that haven't been indexed and scrape them.
-        for entry in entries:
-            if entry.topic_id in old_entries:
-                print "%s (%s) by %s already indexed." \
-                      % (entry.title, entry.topic_id, entry.author)
-            else:
-                print "%s (%s) by %s needs indexing." \
-                      % (entry.title, entry.topic_id, entry.author)
-                if "-i" in argv:
-                    entry.img_url = scrape_topic(entry.topic_id)
-                old_entries[entry.topic_id] = True
-                new_entries[entry.topic_id] = entry
+            # Find the MOCs that haven't been indexed and scrape them.
+            for entry in entries:
+                if entry.topic_id in old_entries:
+                    print "%s (%s) by %s already indexed." \
+                           % (entry.title, entry.topic_id, entry.author)
+                else:
+                    print "%s (%s) by %s needs indexing." \
+                           % (entry.title, entry.topic_id, entry.author)
+                    (entry.img_url, entry.category) \
+                     = scrape_topic(entry.topic_id, classifier)
+                    old_entries[entry.topic_id] = True
+                    new_entries[entry.topic_id] = entry
 
     # Save the updated dictionaries.
     pickle.dump(old_entries, open("indexed.p", "wb"))
@@ -102,47 +104,53 @@ def scrape_forum_page(url):
 
 # Scrapes a topic and saves the first image.
 # topic_id - the id of the topic
-# returns the URL of the thumbnail generated for the topic
-def scrape_topic(topic_id):
+# classifier - the optional classifier to use on the topic
+# returns a tuple, the URL of the thumbnail generated for the topic and
+#         the category of the topic
+def scrape_topic(topic_id, classifier = None):
     # Load the page and initialize the parser.
     page = urllib2.urlopen("%s?showtopic=%s" % (BASE_URL, topic_id))
     soup = BeautifulSoup(page.read())
     print "   Scraping %s..." % soup.title.string
 
-    # Find the first non-emoticon image in the first post.
-    img_url = soup.find(itemprop="commentText") \
-                  .find("img", alt="Posted Image")["src"]
-    # Define a name for the image, keeping the extension.
-    img_name = "%s/%s.%s" % (os.getcwd(), topic_id, img_url.split(".")[-1])
+    category = classifier.check(str(soup.find(itemprop="commentText").getText()))
 
-    # Download and open the image.
-    (filename, header) = urllib.urlretrieve(img_url, img_name)
-    print "   Downloaded %s." % filename
-    img = Image.open(img_name)
+    if "-i" in argv:
+        # Find the first non-emoticon image in the first post.
+        img_url = soup.find(itemprop="commentText") \
+                      .find("img", alt="Posted Image")["src"]
+        # Define a name for the image, keeping the extension.
+        img_name = "%s/%s.%s" % (os.getcwd(), topic_id, img_url.split(".")[-1])
 
-    # Crop the image to a centered square and resize.
-    if img.size[0] > img.size[1]:
-        img = img.crop(( \
-         (img.size[0] - img.size[1]) / 2, 0, \
-         (img.size[0] - img.size[1]) / 2 + img.size[1], img.size[1] \
-        ))
-    else:
-        img = img.crop(( \
-         0, (img.size[1] - img.size[0]) / 2, \
-         img.size[0], (img.size[1] - img.size[0]) / 2 + img.size[0] \
-        ))
-    img.thumbnail((100,100))
-    # Save the thumbnail as a PNG with a different name.
-    img_name = "%s/%sthumb.png" % (os.getcwd(), topic_id)
-    img.save(img_name, "PNG")
+        # Download and open the image.
+        (filename, header) = urllib.urlretrieve(img_url, img_name)
+        print "   Downloaded %s." % filename
+        img = Image.open(img_name)
 
-    # Upload the image and save the URL.
-    while True:
-        os.system("./imguru %s > imgurOut" % img_name)
-        with open("imgurOut", 'r') as imgur_file:
-            img_url = imgur_file.readline().strip()
-            if "http://i.imgur.com/" in img_url:
-                return img_url
+        # Crop the image to a centered square and resize.
+        if img.size[0] > img.size[1]:
+            img = img.crop(( \
+             (img.size[0] - img.size[1]) / 2, 0, \
+             (img.size[0] - img.size[1]) / 2 + img.size[1], img.size[1] \
+            ))
+        else:
+            img = img.crop(( \
+             0, (img.size[1] - img.size[0]) / 2, \
+             img.size[0], (img.size[1] - img.size[0]) / 2 + img.size[0] \
+            ))
+        img.thumbnail((100,100))
+        # Save the thumbnail as a PNG with a different name.
+        img_name = "%s/%sthumb.png" % (os.getcwd(), topic_id)
+        img.save(img_name, "PNG")
+
+        # Upload the image and save the URL.
+        while True:
+            os.system("./imguru %s > imgurOut" % img_name)
+            with open("imgurOut", 'r') as imgur_file:
+                img_url = imgur_file.readline().strip()
+                if "http://i.imgur.com/" in img_url:
+                    return (img_url, category)
+    return ("", category)
 
 # Checks to see if a topic has a tag.
 # tags - a list of tags, each of which is a string
