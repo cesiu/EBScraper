@@ -12,7 +12,8 @@ import os
 class Keyword:
     def __init__(self, token):
         self.token = token
-        self.frequencies = {"OT": 0, "PT": 0, "CW": 0, "EU": 0, "ST": 0, "OR": 0}
+        self.frequencies = {"OT": 0, "PT": 0, "CW": 0, "EU": 0, "ST": 0, \
+                            "OR": 0, "NC": 0}
 
 # Contains the classification function so that the saved keywords are only
 # loaded once and always saved when done.
@@ -61,11 +62,11 @@ class Classifier:
     # returns the classification, a string
     def check(self, text):
         # A text block is initially equally likely to be of any classification.
-        guess = {"OT": 0, "PT": 0, "CW": 0, "EU": 0, "ST": 0, "OR": 0}
+        guess = {"OT": 0, "PT": 0, "CW": 0, "EU": 0, "ST": 0, "OR": 0, "NC": 0}
 
         # For each word in the block: 
         for token in text.split():
-            token = sub("[().,:!'\";-]", '', token.lower())
+            token = sub("[\[\]().,:!'\";-]", '', token.lower())
             # Ignore short and common words.
             if self.is_significant(token):
                 # If we've seen the word before, note how often it's used for
@@ -87,7 +88,7 @@ class Classifier:
 
         # Update the frequencies once we know the correct classification.
         for token in text.split():
-            token = sub("[().,:!'\";-]", '', token.lower())
+            token = sub("[\[\]().,:!'\";-]", '', token.lower())
             if self.is_significant(token):
                 self.keywords[token].frequencies[result] += 1
         return result
@@ -102,8 +103,8 @@ class Classifier:
         for token, frequencies in self.keywords.iteritems():
             values = frequencies.frequencies.values()
             # If there are more than two non-zero values, don't consider the
-            # zeroes.
-            while 0 < values.count(0) < 4:
+            # zeroes. (ignore outliers)
+            while 0 < values.count(0) < 5:
                 values.remove(0)
 
             # If the variance is less than a quarter of the sum (I made up this

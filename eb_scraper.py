@@ -5,6 +5,7 @@
 from bs4 import BeautifulSoup
 from sys import argv
 from classifier import *
+from time import time
 import urllib
 import urllib2
 import string
@@ -50,7 +51,7 @@ def main():
 
     with Classifier() as classifier:
         # For every page:
-        for start in range(0, 30, 30): 
+        for start in range(0, 90, 30): 
             # Construct the URL and scrape the page.
             entries = scrape_forum_page("%s?showforum=%s&st=%s" 
              % (BASE_URL, SUBFORUM_IDS["StarWars"], str(start)))
@@ -71,6 +72,11 @@ def main():
     # Save the updated dictionaries.
     pickle.dump(old_entries, open("indexed.p", "wb"))
     pickle.dump(new_entries, open("to_render.p", "wb"))
+
+    # Tar and remove the images.
+    if "-i" in argv:
+        os.system("tar -cf %s.tar *.png *.jpg" % int(time()))
+        os.system("rm *.png *.jpg")
 
 # Scrapes a page of a forum to find all the MOC topics.
 # url - the url of the forum page
@@ -97,8 +103,8 @@ def scrape_forum_page(url):
         if (("moc" in string.lower(title) or has_tag(tags, "moc")) \
             and not ("wip" in string.lower(title) or has_tag(tags, "wip")) \
             and not is_pinned(topic)):
-            ret_urls.append(IndexEntry(str(link.split('=')[-1]), \
-             str(format_title(title)), str(author)))
+            ret_urls.append(IndexEntry(link.split('=')[-1].encode('utf-8'), \
+             format_title(title).encode('utf-8'), author.encode('utf-8')))
 
     return ret_urls
 
@@ -113,23 +119,31 @@ def scrape_topic(topic_id, classifier = None):
     soup = BeautifulSoup(page.read())
     print "   Scraping %s..." % soup.title.string
 
-    # Classify the topic, giving the title ten times more weight than the first
-    # post's content.
-    category = classifier.check(((soup.find(class_="ipsType_pagetitle").string\
-               + " ") * 10 + soup.find(itemprop="commentText").getText())\
-               .encode('utf-8'))
+    # Classify the topic, giving the title twenty times more weight than the 
+    # first post's content.
+    category = classifier.check(((format_title(soup.find( \
+               class_="ipsType_pagetitle").string) + " ") * 20 + \
+               soup.find(itemprop="commentText").getText()).encode('utf-8'))
 
     if "-i" in argv:
         # Find the first non-emoticon image in the first post.
         img_url = soup.find(itemprop="commentText") \
                       .find("img", alt="Posted Image")["src"]
+        if img_url == None:
+            return ("", category)
+
         # Define a name for the image, keeping the extension.
-        img_name = "%s/%s.%s" % (os.getcwd(), topic_id, img_url.split(".")[-1])
+        img_name = ("%s/%s.%s" % (os.getcwd(), topic_id, \
+                                  img_url.split(".")[-1])).encode('utf-8')
 
         # Download and open the image.
         (filename, header) = urllib.urlretrieve(img_url, img_name)
-        print "   Downloaded %s." % filename
-        img = Image.open(img_name)
+        try:
+            img = Image.open(img_name)
+            print "   Downloaded %s." % filename
+        except:
+            print "   Could not open %s." % filename
+            return ("", category)
 
         # Crop the image to a centered square and resize.
         if img.size[0] > img.size[1]:
@@ -144,7 +158,7 @@ def scrape_topic(topic_id, classifier = None):
             ))
         img.thumbnail((100,100))
         # Save the thumbnail as a PNG with a different name.
-        img_name = "%s/%sthumb.png" % (os.getcwd(), topic_id)
+        img_name = ("%s/%sthumb.png" % (os.getcwd(), topic_id)).encode('utf-8')
         img.save(img_name, "PNG")
 
         # Upload the image and save the URL.

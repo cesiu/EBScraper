@@ -25,10 +25,12 @@ def main():
         base_url = "http://www.eurobricks.com/forum/index.php?showtopic="
         body = "[url=\"https://github.com/cesiu/EBScraper\"]https://github.com/cesiu/EBScraper[/url]\n\n"
 
-        sections = {"OT": "", "PT": "", "CW": "", "EU": "", "ST": "", "OR": ""}
+        sections = {"OT": "", "PT": "", "CW": "", "EU": "", "ST": "", \
+                    "OR": "", "NC": ""}
 
         for key, entry in entries.iteritems():
-            sections[entry.category] += "[url=\"%s%s\"][img]%s[/img][/url] [url=\"%s%s\"][i]%s[/i][/url], by %s\n\n" % (base_url, entry.topic_id, entry.img_url, base_url, entry.topic_id, entry.title, entry.author)
+            if entry.img_url:
+                sections[entry.category] += "[url=\"%s%s\"][img]%s[/img][/url] [url=\"%s%s\"][i]%s[/i][/url], by %s\n\n" % (base_url, entry.topic_id, entry.img_url, base_url, entry.topic_id, entry.title, entry.author)
 
         if sections["OR"]:
             body += "[size=5]Old Republic:[/size][hr]\n" + sections["OR"]
@@ -42,6 +44,8 @@ def main():
             body += "[size=5]Expanded Universe:[/size][hr]\n" + sections["EU"]
         if sections["ST"]:
             body += "[size=5]Sequel Trilogy:[/size][hr]\n" + sections["ST"]
+        if sections["NC"]:
+            body += "[size=5]Fanon or Non-Canon:[/size][hr]\n" + sections["NC"]
 
         print body
 
