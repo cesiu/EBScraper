@@ -109,10 +109,10 @@ class Classifier:
         # Fetch the frequencies of each token.
         for token, frequencies in self.keywords.iteritems():
             values = frequencies.frequencies.values()
-            # If there are more than two non-zero values, don't consider the
+            # If there are more than three non-zero values, don't consider the
             # zeroes. (ignore outliers) (I made up this metric by eyeballing
             # values...)
-            while 0 < values.count(0) < 5:
+            while 0 < values.count(0) < 4:
                 values.remove(0)
 
             # If the variance is less than a quarter of the sum (I made up this
@@ -128,7 +128,6 @@ class Classifier:
                 if sum(values) > 200:
                     if raw_input("Blacklist %s? " % token) == "y":
                         self.blacklist[token] = True
-
         return ret_dict
 
     def __exit__(self, exc_type, exc_value, traceback):
