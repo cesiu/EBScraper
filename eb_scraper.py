@@ -49,7 +49,7 @@ def main():
 
     with Classifier() as classifier:
         # For every page:
-        for start in range(0, 150, 30): 
+        for start in range(180, 210, 30): 
             # Construct the URL and scrape the page.
             entries = scrape_forum_page("%s?showforum=%s&st=%s" 
              % (BASE_URL, SUBFORUM_IDS["StarWars"], str(start)))

@@ -24,6 +24,11 @@ class Classifier:
         if "keywords.p" in os.listdir(os.getcwd()):
             self.keywords = pickle.load(open("keywords.p", "rb"))
 
+        # Load the saved ignored words.
+        self.blacklist = {}
+        if "ignorewords.p" in os.listdir(os.getcwd()):
+            self.blacklist = pickle.load(open("ignorewords.p", "rb"))
+
         # Ignore the conjunctions, pronouns, prepositions, 'be' verbs, and 
         # auxilliary verbs.
         self.common = dict([(word, True) for word in ["and", "but", "or", \
@@ -47,6 +52,8 @@ class Classifier:
          "were", "can", "could", "dare", "do", "does", "did", "have", "has", \
          "had", "having", "may", "might", "must", "need", "ought", "shall", \
          "should", "will", "would"]])
+        self.common.update(self.blacklist)
+
         return self
 
     # Determines if a word is significant enough to be considered.
@@ -116,10 +123,17 @@ class Classifier:
                        / len(values)
             if variance < float(sum(values)) / 4:
                 del ret_dict[token]
+                # If, additionally, the token has been seen too often, ignore
+                # it from now on. 
+                if sum(values) > 200:
+                    if raw_input("Blacklist %s? " % token) == "y":
+                        self.blacklist[token] = True
+
         return ret_dict
 
     def __exit__(self, exc_type, exc_value, traceback):
         pickle.dump(self.prune(), open("keywords.p", "wb"))
+        pickle.dump(self.blacklist, open("ignorewords.p", "wb"))
 
 if __name__ == "__main__":
     with Classifier() as c:
