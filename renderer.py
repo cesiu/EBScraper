@@ -62,9 +62,26 @@ def main():
                 browser.find_element_by_xpath("//a[@href='http://www.eurobricks.com/forum/index.php?showforum=125']").click()
                 browser.find_element_by_xpath("//a[@href='http://www.eurobricks.com/forum/index.php?showtopic=136468']").click()
                 browser.find_element_by_xpath("//a[@title='Reply to this topic']").click()
-                browser.find_element_by_xpath("//a[@title='Toggle editing mode']").click()
-                time.sleep(1)
-                browser.find_element_by_xpath("//textarea[@class='cke_source cke_enable_context_menu']").send_keys(body)
+
+                time.sleep(2)
+                tries = 10
+                while tries > 0:
+                    try:
+                        browser.find_element_by_xpath("//a[@title='Toggle editing mode']").click()
+                    except:
+                        tries -= 1
+                        continue
+                    tries = 0
+                time.sleep(2)
+                tries = 10
+                while tries > 0:
+                    try:
+                        browser.find_element_by_xpath("//textarea[@class='cke_source cke_enable_context_menu']").send_keys(body)
+                    except:
+                        tries -= 1
+                        continue
+                    tries = 0
+
                 browser.find_element_by_name("dosubmit").click()
 
                 browser.find_element_by_link_text("Sign Out").click()
