@@ -50,6 +50,8 @@ def main():
     new_entries = {}
 
     with Classifier() as classifier:
+        scrape_topic("133708", classifier)
+
         # For every page:
         for start in range(0, 90, 30): 
             # Construct the URL and scrape the page.
@@ -126,10 +128,18 @@ def scrape_topic(topic_id, classifier = None):
                soup.find(itemprop="commentText").getText()).encode('utf-8'))
 
     if "-i" in argv:
-        # Find the first non-emoticon image in the first post.
-        img_url = soup.find(itemprop="commentText") \
-                      .find("img", alt="Posted Image")["src"]
+        # Find the first non-emoticon, non-attached, non-'Indexed!' image 
+        # in the first post.
+        img_url = None
+        images = soup.find(itemprop="commentText").find_all("img", class_=True)
+        for image in images:
+            if "bbc_img" in image["class"] and image["src"] \
+               != "http://www.eurobricks.com/forum/uploads/1242820715/"\
+                       + "gallery_2351_18_164.gif":
+                img_url = image["src"]
+                break;
         if img_url == None:
+            print "   Could not find an image."
             return ("", category)
 
         # Define a name for the image, keeping the extension.

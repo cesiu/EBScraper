@@ -82,9 +82,9 @@ class Classifier:
         # Guess which classification most likely applies to the text block and
         # ask the user to confirm or correct.
         result = max(guess, key=guess.get)
-        confirm = raw_input(result)
+        confirm = raw_input("   %s? " % result)
         if confirm != "y":
-            result = raw_input("Correction: ")
+            result = raw_input("   Correction: ")
 
         # Update the frequencies once we know the correct classification.
         for token in text.split():
@@ -103,13 +103,14 @@ class Classifier:
         for token, frequencies in self.keywords.iteritems():
             values = frequencies.frequencies.values()
             # If there are more than two non-zero values, don't consider the
-            # zeroes. (ignore outliers)
+            # zeroes. (ignore outliers) (I made up this metric by eyeballing
+            # values...)
             while 0 < values.count(0) < 5:
                 values.remove(0)
 
             # If the variance is less than a quarter of the sum (I made up this
-            # metric by eyeballing existing values...), remove the token 
-            # (assume it's just generally common among all topics). 
+            # metric, too!), remove the token (assume it's just generally 
+            # common among all topics). 
             mean = float(sum(values)) / len(values)
             variance = float(sum([(value - mean) ** 2 for value in values])) \
                        / len(values)
