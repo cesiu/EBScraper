@@ -50,8 +50,6 @@ def main():
     new_entries = {}
 
     with Classifier() as classifier:
-        scrape_topic("133708", classifier)
-
         # For every page:
         for start in range(0, 90, 30): 
             # Construct the URL and scrape the page.
