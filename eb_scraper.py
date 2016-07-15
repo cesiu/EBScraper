@@ -15,12 +15,10 @@ import re
 
 try:
     from PIL import Image
-    from selenium import webdriver
-    from selenium.webdriver.common.keys import Keys
 except:
     if "-i" in argv:
         argv.remove("-i")
-        print "Selenium or Pillow not installed. Not generating thumbnails."
+        print "Pillow not installed. Not generating thumbnails."
 
 # The base forum URL.
 BASE_URL = "http://www.eurobricks.com/forum/index.php"
@@ -51,7 +49,7 @@ def main():
 
     with Classifier() as classifier:
         # For every page:
-        for start in range(0, 90, 30): 
+        for start in range(0, 150, 30): 
             # Construct the URL and scrape the page.
             entries = scrape_forum_page("%s?showforum=%s&st=%s" 
              % (BASE_URL, SUBFORUM_IDS["StarWars"], str(start)))
