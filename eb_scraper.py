@@ -164,12 +164,12 @@ def scrape_topic(topic_id, classifier = None, gen_thumbs = False):
                                   img_url.split(".")[-1])).encode('utf-8')
 
         # Download and open the image.
-        (filename, header) = urllib.urlretrieve(img_url, img_name)
         try:
+            (filename, header) = urllib.urlretrieve(img_url, img_name)
             img = Image.open(img_name)
             print "   Downloaded %s." % filename
         except:
-            print "   Could not open %s." % filename
+            print "   Could not download or open image."
             return ("", category)
 
         # Crop the image to a centered square and resize.
