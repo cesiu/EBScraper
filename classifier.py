@@ -1,6 +1,6 @@
 # Attempts to guess how an MOC should be classified.
 # author: Christopher (cesiu)
-# version: 0.1
+# version: 0.2
 
 from sys import argv
 from re import sub
@@ -18,6 +18,9 @@ class Keyword:
 # Contains the classification function so that the saved keywords are only
 # loaded once and always saved when done.
 class Classifier:
+    def __init__(self, auto=False):
+        self.auto = auto
+
     def __enter__(self):
         # Load the saved keywords.
         self.keywords = {}
@@ -89,15 +92,19 @@ class Classifier:
         # Guess which classification most likely applies to the text block and
         # ask the user to confirm or correct.
         result = max(guess, key=guess.get)
-        confirm = raw_input("   %s? " % result)
-        if confirm != "y":
-            result = raw_input("   Correction: ")
 
-        # Update the frequencies once we know the correct classification.
-        for token in text.split():
-            token = sub("[\[\]().,:!'\";-]", '', token.lower())
-            if self.is_significant(token):
-                self.keywords[token].frequencies[result] += 1
+        if not self.auto:
+            if raw_input("   %s? " % result) != "y":
+                result = raw_input("   Correction: ")
+
+            # Update the frequencies once we know the correct classification.
+            for token in text.split():
+                token = sub("[\[\]().,:!'\";-]", '', token.lower())
+                if self.is_significant(token):
+                    self.keywords[token].frequencies[result] += 1
+        else:
+            print "   Classified as %s." % result
+
         return result
 
     # Removes insignificant tokens from the keyword dictionary.

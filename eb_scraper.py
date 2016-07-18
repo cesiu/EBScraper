@@ -1,9 +1,10 @@
 # An experiment using Beautiful Soup to scrape selected threads from a forum.
 # author: Christopher (cesiu)
-# version: 0.1
+# version: 0.2
 
 from bs4 import BeautifulSoup
-from sys import argv
+from PIL import Image
+from sys import argv, exit
 from classifier import *
 from time import time
 import urllib
@@ -13,15 +14,10 @@ import pickle
 import os
 import re
 
-try:
-    from PIL import Image
-except:
-    if "-i" in argv:
-        argv.remove("-i")
-        print "Pillow not installed. Not generating thumbnails."
-
 # The base forum URL.
 BASE_URL = "http://www.eurobricks.com/forum/index.php"
+# The number of topics per page.
+NUM_TOPICS = 30
 
 # Represents one entry in an index.
 class IndexEntry:
@@ -40,6 +36,21 @@ def main():
         "NarEurbrikka": "175",
     }
 
+    # Get the range from the args.
+    if len(argv) < 3:
+        err_exit()
+    try:
+        page_min = int(argv[1]) - 1
+        page_max = int(argv[2]) 
+    except:
+        err_exit()
+
+    # Check for options.
+    opts = ""
+    if len(argv) > 3:
+        for arg in argv[3:]:
+            opts += arg
+
     # Load the dictionary of already-indexed topics.
     old_entries = {}
     if "indexed.p" in os.listdir(os.getcwd()):
@@ -47,12 +58,13 @@ def main():
     # Create the dictionary of newly-indexed topics.
     new_entries = {}
 
-    with Classifier() as classifier:
+    with Classifier("c" in opts) as classifier:
         # For every page:
-        for start in range(0, 30, 30): 
+        for start in range(page_min * NUM_TOPICS, \
+                           page_max * NUM_TOPICS, NUM_TOPICS): 
             # Construct the URL and scrape the page.
-            entries = scrape_forum_page("%s?showforum=%s&st=%s" 
-             % (BASE_URL, SUBFORUM_IDS["StarWars"], str(start)))
+            entries = scrape_forum_page("%s?showforum=%s&st=%s" \
+             % (BASE_URL, SUBFORUM_IDS["StarWars"], str(start)), "m" in opts)
         
             # Find the MOCs that haven't been indexed and scrape them.
             for entry in entries:
@@ -63,7 +75,7 @@ def main():
                     print "%s (%s) by %s needs indexing." \
                            % (entry.title, entry.topic_id, entry.author)
                     (entry.img_url, entry.category) \
-                     = scrape_topic(entry.topic_id, classifier)
+                     = scrape_topic(entry.topic_id, classifier, "i" in opts)
                     old_entries[entry.topic_id] = True
                     new_entries[entry.topic_id] = entry
 
@@ -72,14 +84,15 @@ def main():
     pickle.dump(new_entries, open("to_render.p", "wb"))
 
     # Tar and remove the images.
-    if "-i" in argv:
+    if "i" in opts:
         os.system("tar -cf %s.tar *.png *.jpg" % int(time()))
         os.system("rm *.png *.jpg")
 
 # Scrapes a page of a forum to find all the MOC topics.
 # url - the url of the forum page
+# include_mods - whether or not to include mods
 # returns a list of IndexEntries
-def scrape_forum_page(url):
+def scrape_forum_page(url, include_mods = False):
     ret_urls = []
     # Load the page and initialize the parser.
     page = urllib2.urlopen(url)
@@ -97,10 +110,12 @@ def scrape_forum_page(url):
         tags = [tag.contents[0].string if tag.find("span") else tag.string \
                 for tag in topic.find_all(attrs = {"data-tooltip": True})]
 
-        # Grab all the non-pinned, non-WIP, MOC topics:
-        if (("moc" in string.lower(title) or has_tag(tags, "moc")) \
-            and not ("wip" in string.lower(title) or has_tag(tags, "wip")) \
-            and not is_pinned(topic)):
+        # Grab all the non-pinned, non-WIP, MOC (or mod) topics:
+        if (re.search("(^|[^a-z])moc([^a-z]|$)", string.lower(title)) \
+           or has_tag(tags, "moc") or (include_mods \
+           and (re.search("(^|[^a-z])mod([^a-z]|$)", string.lower(title)) \
+           or has_tag(tags, "mod")))) and not ("wip" in string.lower(title) \
+           or has_tag(tags, "wip")) and not is_pinned(topic):
             ret_urls.append(IndexEntry(link.split('=')[-1].encode('utf-8'), \
              format_title(title).encode('utf-8'), author.encode('utf-8')))
 
@@ -109,29 +124,35 @@ def scrape_forum_page(url):
 # Scrapes a topic and saves the first image.
 # topic_id - the id of the topic
 # classifier - the optional classifier to use on the topic
+# gen_thumbs - whether or not to generate thumbnails
 # returns a tuple, the URL of the thumbnail generated for the topic and
 #         the category of the topic
-def scrape_topic(topic_id, classifier = None):
+def scrape_topic(topic_id, classifier = None, gen_thumbs = False):
     # Load the page and initialize the parser.
     page = urllib2.urlopen("%s?showtopic=%s" % (BASE_URL, topic_id))
     soup = BeautifulSoup(page.read())
     print "   Scraping %s..." % soup.title.string
 
-    # Classify the topic, giving the title twenty times more weight than the 
-    # first post's content.
-    category = classifier.check(((format_title(soup.find( \
-               class_="ipsType_pagetitle").string) + " ") * 20 + \
-               soup.find(itemprop="commentText").getText()).encode('utf-8'))
+    if classifier:
+        # Classify the topic, giving the title twenty times more weight than 
+        # the first post's content.
+        category = classifier.check(((format_title(soup.find( \
+                   class_="ipsType_pagetitle").string) + " ") * 20 + \
+                   soup.find(itemprop="commentText") \
+                   .getText()).encode('utf-8'))
 
-    if "-i" in argv:
+    if gen_thumbs:
         # Find the first non-emoticon, non-attached, non-'Indexed!' image 
         # in the first post.
         img_url = None
         images = soup.find(itemprop="commentText").find_all("img", class_=True)
         for image in images:
             if "bbc_img" in image["class"] and image["src"] \
-               != "http://www.eurobricks.com/forum/uploads/1242820715/"\
-                       + "gallery_2351_18_164.gif":
+             != "http://www.eurobricks.com/forum/uploads/1242820715/"\
+             + "gallery_2351_18_164.gif" and image["src"] \
+             != "http://www.brickshelf.com/gallery/KimT/Mixed/EB/indexed.gif" \
+             and image["src"] != "http://www.brickshelf" \
+             + ".com/gallery/legowiz23/ebthumbnails/indexed.gif":
                 img_url = image["src"]
                 break;
         if img_url == None:
@@ -208,6 +229,15 @@ def format_title(title):
             ret_str.append(token)
 
     return ' '.join(ret_str)
+
+# Prints the help message and exits.
+def err_exit():
+    print "Usage : pypy eb_scraper.py [page min] [page max] <options>\n" \
+          + "Options:\n" \
+          + "   -i  -  Generate thumbnails.\n" \
+          + "   -c  -  Automatically classify MOCs.\n" \
+          + "   -m  -  Include mods."
+    exit()
 
 if __name__ == "__main__":
     main()

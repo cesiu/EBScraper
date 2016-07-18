@@ -1,8 +1,9 @@
 # Renders a pickled index.
 # author: Christopher (cesiu)
-# version: 0.1
+# version: 0.2
 
-from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 from eb_scraper import IndexEntry
 from sys import argv
 import urllib2
@@ -10,14 +11,6 @@ import string
 import pickle
 import os
 import time
-
-try:
-    from selenium import webdriver
-    from selenium.webdriver.common.keys import Keys
-except:
-    if "-u" in argv:
-        argv.remove("-u")
-        print "Selenium not installed. Not posting results."
 
 def main():
     if "to_render.p" in os.listdir(os.getcwd()):
@@ -73,37 +66,37 @@ def main():
                         failures.append("OT")
                 if sections["PT"]:
                     try:
-                        edit_post(browser, "2612379", sections["PT"])
+                        edit_post(browser, "2612386", sections["PT"])
                         successes.append("PT")
                     except:
                         failures.append("PT")
                 if sections["ST"]:
                     try:
-                        edit_post(browser, "2612382", sections["ST"])
+                        edit_post(browser, "2613058", sections["ST"])
                         successes.append("ST")
                     except:
                         failures.append("ST")
                 if sections["EU"]:
                     try:
-                        edit_post(browser, "2612384", sections["EU"])
+                        edit_post(browser, "2613068", sections["EU"])
                         successes.append("EU")
                     except:
                         failures.append("EU")
                 if sections["CW"]:
                     try:
-                        edit_post(browser, "2612386", sections["CW"])
+                        edit_post(browser, "2613077", sections["CW"])
                         successes.append("CW")
                     except:
                         failures.append("CW")
                 if sections["OR"]:
                     try:
-                        edit_post(browser, "2612388", sections["OR"])
+                        edit_post(browser, "2613085", sections["OR"])
                         successes.append("OR")
                     except:
                         failures.append("OR")
                 if sections["NC"]:
                     try:
-                        edit_post(browser, "2612390", sections["NC"])
+                        edit_post(browser, "2613095", sections["NC"])
                         successes.append("Fanon")
                     except:
                         failures.append("Fanon")
@@ -118,7 +111,7 @@ def main():
                 else:
                     log_msg += "no failures."
 
-                edit_post(browser, "2612405", time.strftime("\n[b]%d %B %Y[/b] at %H:%M:%S, %Z: ") + log_msg)
+                edit_post(browser, "2613104", time.strftime("\n[b]%d %B %Y[/b] at %H:%M:%S, %Z: ") + log_msg)
 
                 browser.find_element_by_link_text("Sign Out").click()
                 browser.close()
