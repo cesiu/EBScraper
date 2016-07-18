@@ -141,7 +141,8 @@ def scrape_topic(topic_id, classifier = None, gen_thumbs = False):
                    soup.find(itemprop="commentText") \
                    .getText()).encode('utf-8'))
 
-    if gen_thumbs:
+    # Check to see if the topic shouldn't be indexed (a find, for example).
+    if gen_thumbs and category != "NA":
         # Find the first non-emoticon, non-attached, non-'Indexed!' image 
         # in the first post.
         img_url = None

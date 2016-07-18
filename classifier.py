@@ -95,13 +95,16 @@ class Classifier:
 
         if not self.auto:
             if raw_input("   %s? " % result) != "y":
-                result = raw_input("   Correction: ")
+                result = raw_input("   Correction: ").upper()
 
             # Update the frequencies once we know the correct classification.
-            for token in text.split():
-                token = sub("[\[\]().,:!'\";-]", '', token.lower())
-                if self.is_significant(token):
-                    self.keywords[token].frequencies[result] += 1
+            try:
+                for token in text.split():
+                    token = sub("[\[\]().,:!'\";-]", '', token.lower())
+                    if self.is_significant(token):
+                        self.keywords[token].frequencies[result] += 1
+            except:
+                print "   Invalid classification."
         else:
             print "   Classified as %s." % result
 
