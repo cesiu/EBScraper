@@ -87,11 +87,6 @@ def main():
     pickle.dump(old_entries, open("indexed.p", "wb"))
     pickle.dump(new_entries, open("to_render.p", "wb"))
 
-    # Tar and remove the images.
-    if "i" in opts:
-        os.system("tar -cf %s.tar *.png *.jpg" % int(time()))
-        os.system("rm *.png *.jpg")
-
 # Scrapes a page of a forum to find all the MOC topics.
 # url - the url of the forum page
 # include_mods - whether or not to include mods

@@ -109,6 +109,12 @@ def main():
 
                 browser.find_element_by_link_text("Sign Out").click()
                 browser.close()
+        
+            # Tar and remove the images and pickle file.
+            stamp = int(time.time())
+            os.system("tar -cf %s.tar to_render.p *.png *.jpg *.gif" % stamp)
+            os.system("gzip %s.tar" % stamp)
+            os.system("rm to_render.p *.png *.jpg *.gif")
 
 def edit_post(browser, post_id, text):
     browser.find_element_by_id("edit_post_%s" % post_id).click()
