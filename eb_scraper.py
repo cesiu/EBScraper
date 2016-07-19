@@ -115,11 +115,11 @@ def scrape_forum_page(url, include_mods = False):
                 for tag in topic.find_all(attrs = {"data-tooltip": True})]
 
         # Grab all the non-pinned, non-WIP, MOC (or mod) topics:
-        if (re.search("(^|[^a-z])moc([^a-z]|$)", string.lower(title)) \
+        if (re.search("(^|[^a-z])moc([^a-rt-z]|$)", string.lower(title)) \
            or has_tag(tags, "moc") or (include_mods \
-           and (re.search("(^|[^a-z])mod([^a-z]|$)", string.lower(title)) \
-           or has_tag(tags, "mod")))) \
-           and not (re.search("(^|[^a-z])wip([^a-z]|$)", string.lower(title)) \
+           and (re.search("(^|[^a-z])mod([^a-rt-z]|$)", string.lower(title)) \
+           or has_tag(tags, "mod")))) and not (re.search( \
+           "(^|[^a-z])wip([^a-rt-z]|$)", string.lower(title)) \
            or has_tag(tags, "wip")) and not is_pinned(topic):
             ret_urls.append(IndexEntry(link.split('=')[-1].encode('utf-8'), \
              format_title(title).encode('utf-8'), author.encode('utf-8')))
