@@ -3,7 +3,6 @@
 # version: 0.2
 
 from bs4 import BeautifulSoup
-from PIL import Image
 from sys import argv, exit
 from classifier import *
 from time import time
@@ -13,6 +12,11 @@ import string
 import pickle
 import os
 import re
+
+try:
+    from PIL import Image
+except:
+    print "Pillow not installed."
 
 # The base forum URL.
 BASE_URL = "http://www.eurobricks.com/forum/index.php"
@@ -114,7 +118,8 @@ def scrape_forum_page(url, include_mods = False):
         if (re.search("(^|[^a-z])moc([^a-z]|$)", string.lower(title)) \
            or has_tag(tags, "moc") or (include_mods \
            and (re.search("(^|[^a-z])mod([^a-z]|$)", string.lower(title)) \
-           or has_tag(tags, "mod")))) and not ("wip" in string.lower(title) \
+           or has_tag(tags, "mod")))) \
+           and not (re.search("(^|[^a-z])wip([^a-z]|$)", string.lower(title)) \
            or has_tag(tags, "wip")) and not is_pinned(topic):
             ret_urls.append(IndexEntry(link.split('=')[-1].encode('utf-8'), \
              format_title(title).encode('utf-8'), author.encode('utf-8')))

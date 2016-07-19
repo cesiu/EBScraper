@@ -8,12 +8,13 @@ import string
 import pickle
 import os
 
+CLASSES = ["OT", "PT", "CW", "EU", "ST", "OR", "NC"]
+
 # Represents one token and how often its used for each classification.
 class Keyword:
     def __init__(self, token):
         self.token = token
-        self.frequencies = {"OT": 0, "PT": 0, "CW": 0, "EU": 0, "ST": 0, \
-                            "OR": 0, "NC": 0}
+        self.frequencies = dict([(key, 0) for key in CLASSES])
 
 # Contains the classification function so that the saved keywords are only
 # loaded once and always saved when done.
@@ -72,7 +73,7 @@ class Classifier:
     # returns the classification, a string
     def check(self, text):
         # A text block is initially equally likely to be of any classification.
-        guess = {"OT": 0, "PT": 0, "CW": 0, "EU": 0, "ST": 0, "OR": 0, "NC": 0}
+        guess = dict([(key, 0) for key in CLASSES])
 
         # For each word in the block: 
         for token in text.split():
@@ -98,12 +99,12 @@ class Classifier:
                 result = raw_input("   Correction: ").upper()
 
             # Update the frequencies once we know the correct classification.
-            try:
+            if result in CLASSES:
                 for token in text.split():
                     token = sub("[\[\]().,:!'\";-]", '', token.lower())
                     if self.is_significant(token):
                         self.keywords[token].frequencies[result] += 1
-            except:
+            else:
                 print "   Invalid classification."
         else:
             print "   Classified as %s." % result
