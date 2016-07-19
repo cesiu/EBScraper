@@ -2,9 +2,8 @@
 # author: Christopher (cesiu)
 # version: 0.2
 
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from eb_scraper import IndexEntry
+from classifier import CLASSES
 from sys import argv
 import urllib2
 import string
@@ -12,37 +11,27 @@ import pickle
 import os
 import time
 
+try:
+    from selenium import webdriver
+    from selenium.webdriver.common.keys import Keys
+except:
+    print "Selenium not installed."
+
 def main():
     if "to_render.p" in os.listdir(os.getcwd()):
         entries = pickle.load(open("to_render.p", "rb"))
         base_url = "http://www.eurobricks.com/forum/index.php?showtopic="
-        body = "[url=\"https://github.com/cesiu/EBScraper\"]https://github.com/cesiu/EBScraper[/url]\n\n"
 
-        sections = {"OT": "", "PT": "", "CW": "", "EU": "", "ST": "", \
-                    "OR": "", "NC": ""}
+        sections = dict([(key, "") for key in CLASSES])
         successes = []
         failures = []
 
         for key, entry in entries.iteritems():
-            if entry.img_url:
+            if entry.img_url or "-d" in argv and entry.category != "NA":
                 sections[entry.category] += "\n\n[url=\"%s%s\"][img]%s[/img][/url] [url=\"%s%s\"][i]%s[/i][/url], by %s" % (base_url, entry.topic_id, entry.img_url, base_url, entry.topic_id, entry.title, entry.author)
 
-        if sections["OR"]:
-            body += "[color=\"#8B0000\"][size=5][b]Old Republic:[/b][/size][/color][hr]\n" + sections["OR"]
-        if sections["PT"]:
-            body += "[color=\"#8B0000\"][size=5][b]Prequel Trilogy:[/b][/size][/color][hr]\n" + sections["PT"]
-        if sections["CW"]:
-            body += "[color=\"#8B0000\"][size=5][b]Clone Wars:[/b][/size][/color][hr]\n" + sections["CW"]
-        if sections["OT"]:
-            body += "[color=\"#8B0000\"][size=5][b]Original Trilogy:[/b][/size][/color][hr]\n" + sections["OT"]
-        if sections["EU"]:
-            body += "[color=\"#8B0000\"][size=5][b]Expanded Universe:[/b][/size][/color][hr]\n" + sections["EU"]
-        if sections["ST"]:
-            body += "[color=\"#8B0000\"][size=5][b]Sequel Trilogy:[/b][/size][/color][hr]\n" + sections["ST"]
-        if sections["NC"]:
-            body += "[color=\"#8B0000\"][size=5][b]Fanon or Non-Canon:[/b][/size][/color][hr]\n" + sections["NC"]
-
-        print body
+        for key in CLASSES:
+            print "\n\n" + key + ":\n-----" + sections[key]
 
         if "-u" in argv:
             with open("info", 'r') as info_file:
