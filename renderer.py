@@ -4,7 +4,7 @@
 
 from eb_scraper import IndexEntry
 from classifier import CLASSES
-from sys import argv
+from sys import argv, exit
 import urllib2
 import string
 import pickle
@@ -21,10 +21,15 @@ def main():
     if "to_render.p" in os.listdir(os.getcwd()):
         entries = pickle.load(open("to_render.p", "rb"))
         base_url = "http://www.eurobricks.com/forum/index.php?showtopic="
-
+        post_ids = {"OT":"2612377", "PT":"2612386", "ST":"2613058", "EU":"2613068", "CW":"2613077", "OR":"2613085", "NC":"2613095"}
         sections = dict([(key, "") for key in CLASSES])
         successes = []
         failures = []
+
+        for key in CLASSES:
+            if not key in post_ids:
+                print "Post id not found for %s." % key
+                exit()
 
         for key, entry in entries.iteritems():
             if entry.img_url or "-d" in argv and entry.category != "NA":
