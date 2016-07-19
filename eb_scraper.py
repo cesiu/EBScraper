@@ -158,7 +158,7 @@ def scrape_topic(entry, classifier = None, gen_thumbs = False):
             return
 
         # Define a name for the image, keeping the extension.
-        img_name = ("%s/%s.%s" % (os.getcwd(), topic_id, \
+        img_name = ("%s/%s.%s" % (os.getcwd(), entry.topic_id, \
                                   img_src.split(".")[-1])).encode('utf-8')
 
         # Download and open the image.
@@ -183,7 +183,8 @@ def scrape_topic(entry, classifier = None, gen_thumbs = False):
             ))
         img.thumbnail((100,100))
         # Save the thumbnail as a PNG with a different name.
-        img_name = ("%s/%sthumb.png" % (os.getcwd(), topic_id)).encode('utf-8')
+        img_name = ("%s/%sthumb.png" % (os.getcwd(), entry.topic_id)) \
+                   .encode('utf-8')
         img.save(img_name, "PNG")
 
         # Upload the image and save the URL.
@@ -191,7 +192,7 @@ def scrape_topic(entry, classifier = None, gen_thumbs = False):
             os.system("./imguru %s > imgurOut" % img_name)
             with open("imgurOut", 'r') as imgur_file:
                 entry.img_url = imgur_file.readline().strip()
-                if "http://i.imgur.com/" in img_url:
+                if "http://i.imgur.com/" in entry.img_url:
                     return
     return
 

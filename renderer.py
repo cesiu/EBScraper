@@ -42,8 +42,8 @@ def main():
         # indexed.
         for key, entry in entries.iteritems():
             if (entry.img_url or "-d" in argv) and entry.category != "NA":
-                sections[entry.category] += "\n\n[url=\"%s%s\"][img]%s[/img]" \
-                 + "[/url] [url=\"%s%s\"][i]%s[/i][/url], by %s" \
+                sections[entry.category] += ("\n\n[url=\"%s%s\"][img]%s[/img]" \
+                 + "[/url] [url=\"%s%s\"][i]%s[/i][/url], by %s") \
                  % (base_url, entry.topic_id, entry.img_url, base_url, \
                  entry.topic_id, entry.title, entry.author)
 
@@ -80,7 +80,7 @@ def main():
 
                 # Go to the index topic.
                 browser.find_element_by_xpath("//a[@href='http://" \
-                 + "www.eurobricks.com/forum/index.php?showtopic=137557']")
+                 + "www.eurobricks.com/forum/index.php?showtopic=137557']") \
                  .click()
 
                 # For every category that has new entries:
