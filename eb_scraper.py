@@ -78,8 +78,7 @@ def main():
                 else:
                     print "%s (%s) by %s needs indexing." \
                            % (entry.title, entry.topic_id, entry.author)
-                    (entry.img_url, entry.category) \
-                     = scrape_topic(entry.topic_id, classifier, "i" in opts)
+                    scrape_topic(entry, classifier, "i" in opts)
                     old_entries[entry.topic_id] = True
                     new_entries[entry.topic_id] = entry
 
@@ -122,30 +121,28 @@ def scrape_forum_page(url, include_mods = False):
     return ret_urls
 
 # Scrapes a topic and saves the first image.
-# topic_id - the id of the topic
+# entry - an IndexEntry for the topic
 # classifier - the optional classifier to use on the topic
 # gen_thumbs - whether or not to generate thumbnails
-# returns a tuple, the URL of the thumbnail generated for the topic and
-#         the category of the topic
-def scrape_topic(topic_id, classifier = None, gen_thumbs = False):
+def scrape_topic(entry, classifier = None, gen_thumbs = False):
     # Load the page and initialize the parser.
-    page = urllib2.urlopen("%s?showtopic=%s" % (BASE_URL, topic_id))
+    page = urllib2.urlopen("%s?showtopic=%s" % (BASE_URL, entry.topic_id))
     soup = BeautifulSoup(page.read())
     print "   Scraping %s..." % soup.title.string
 
     if classifier:
         # Classify the topic, giving the title twenty times more weight than 
         # the first post's content.
-        category = classifier.check(((format_title(soup.find( \
-                   class_="ipsType_pagetitle").string) + " ") * 20 + \
-                   soup.find(itemprop="commentText") \
-                   .getText()).encode('utf-8'))
+        entry.category = classifier.check(((format_title(soup.find( \
+                         class_="ipsType_pagetitle").string) + " ") * 20 + \
+                         soup.find(itemprop="commentText") \
+                         .getText()).encode('utf-8'))
 
     # Check to see if the topic shouldn't be indexed (a find, for example).
-    if gen_thumbs and category != "NA":
+    if gen_thumbs and entry.category != "NA":
         # Find the first non-emoticon, non-attached, non-'Indexed!' image 
         # in the first post.
-        img_url = None
+        img_src = None
         images = soup.find(itemprop="commentText").find_all("img", class_=True)
         for image in images:
             if "bbc_img" in image["class"] and image["src"] \
@@ -154,19 +151,19 @@ def scrape_topic(topic_id, classifier = None, gen_thumbs = False):
              != "http://www.brickshelf.com/gallery/KimT/Mixed/EB/indexed.gif" \
              and image["src"] != "http://www.brickshelf" \
              + ".com/gallery/legowiz23/ebthumbnails/indexed.gif":
-                img_url = image["src"]
+                img_src = image["src"]
                 break;
-        if img_url == None:
+        if img_src == None:
             print "   Could not find an image."
-            return ("", category)
+            return
 
         # Define a name for the image, keeping the extension.
         img_name = ("%s/%s.%s" % (os.getcwd(), topic_id, \
-                                  img_url.split(".")[-1])).encode('utf-8')
+                                  img_src.split(".")[-1])).encode('utf-8')
 
         # Download and open the image.
         try:
-            (filename, header) = urllib.urlretrieve(img_url, img_name)
+            (filename, header) = urllib.urlretrieve(img_src, img_name)
             img = Image.open(img_name)
             print "   Downloaded %s." % filename
         except:
@@ -193,10 +190,10 @@ def scrape_topic(topic_id, classifier = None, gen_thumbs = False):
         while True:
             os.system("./imguru %s > imgurOut" % img_name)
             with open("imgurOut", 'r') as imgur_file:
-                img_url = imgur_file.readline().strip()
+                entry.img_url = imgur_file.readline().strip()
                 if "http://i.imgur.com/" in img_url:
-                    return (img_url, category)
-    return ("", category)
+                    return
+    return
 
 # Checks to see if a topic has a tag.
 # tags - a list of tags, each of which is a string
