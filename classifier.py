@@ -102,23 +102,27 @@ class Classifier:
 
         if not self.auto:
             if raw_input("   %s? " % result) != "y":
-                result = raw_input("   Correction: ")
+                correction = raw_input("   Correction: ")
 
                 # Update the frequencies now that we know the correct 
                 # classification, unless the user wants to ignore the topic.
-                if result in CLASSES:
-                    for token in text.split():
-                        token = sub("[\[\]().,:!'\";-]", '', token.lower())
-                        if self.is_significant(token):
-                            self.keywords[token].frequencies[result] += 1
-                    print "   Updating frequencies."
-                elif result == "NA":
-                    print "   Ignoring topic."
-                # If the user made a typo, stick the topic in the misc
-                # category so it can be manually indexed later.
+                if correction != result: 
+                    result = correction
+                    if result in CLASSES:
+                        for token in text.split():
+                            token = sub("[\[\]().,:!'\";-]", '', token.lower())
+                            if self.is_significant(token):
+                                self.keywords[token].frequencies[result] += 1
+                        print "   Updating frequencies."
+                    elif result == "NA":
+                        print "   Ignoring topic."
+                    # If the user made a typo, stick the topic in the misc
+                    # category so it can be manually indexed later.
+                    else:
+                        print "   Invalid classification. Setting to \"SPall\"."
+                        result = "SPall"
                 else:
-                    print "   Invalid classification. Setting to \"SPall\"."
-                    result = "SPall"
+                    print "   No change."
         else:
             print "   Classified as %s." % result
 
