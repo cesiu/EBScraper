@@ -29,6 +29,12 @@ POST_IDS = {"OTveh":"0000001", "OTloc":"0000002", "OTchr":"0000003", \
             "SPall":"0000025"}
 
 def main():
+    # Check for options.
+    opts = ""
+    if len(argv) > 1:
+        for arg in argv[1:]:
+            opts += arg
+
     if "to_render.p" in os.listdir(os.getcwd()):
         # Initialize empty strings for the new contents of each post.
         sections = dict([(key, "") for key in CLASSES])
@@ -46,7 +52,7 @@ def main():
         # Render the BBCode for all the entries that have images and should be
         # indexed.
         for key, entry in entries.iteritems():
-            if (entry.img_url or "-d" in argv) and entry.category != "NA":
+            if (entry.img_url or "d" in opts) and entry.category in CLASSES:
                 sections[entry.category] += ("\n\n[url=\"%s?showtopic=%s\"]" \
                  + "[img]%s[/img][/url] [url=\"%s?showtopic=%s\"][i]%s[/i]" \
                  + "[/url], by %s") % (BASE_URL, entry.topic_id, \
@@ -58,7 +64,7 @@ def main():
             print "\n\n" + key + ":\n-----" + sections[key]
 
         # If the results should be uploaded:
-        if "-u" in argv:
+        if "u" in opts:
             with open("info", 'r') as info_file:
                 # Read the EB username and password from the info file.
                 username = info_file.readline().strip()

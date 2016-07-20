@@ -104,14 +104,21 @@ class Classifier:
             if raw_input("   %s? " % result) != "y":
                 result = raw_input("   Correction: ")
 
-            # Update the frequencies once we know the correct classification.
-            if result in CLASSES:
-                for token in text.split():
-                    token = sub("[\[\]().,:!'\";-]", '', token.lower())
-                    if self.is_significant(token):
-                        self.keywords[token].frequencies[result] += 1
-            else:
-                print "   Invalid classification."
+                # Update the frequencies now that we know the correct 
+                # classification, unless the user wants to ignore the topic.
+                if result in CLASSES:
+                    for token in text.split():
+                        token = sub("[\[\]().,:!'\";-]", '', token.lower())
+                        if self.is_significant(token):
+                            self.keywords[token].frequencies[result] += 1
+                    print "   Updating frequencies."
+                elif result == "NA":
+                    print "   Ignoring topic."
+                # If the user made a typo, stick the topic in the misc
+                # category so it can be manually indexed later.
+                else:
+                    print "   Invalid classification. Setting to \"SPall\"."
+                    result = "SPall"
         else:
             print "   Classified as %s." % result
 
@@ -152,5 +159,7 @@ class Classifier:
         pickle.dump(self.blacklist, open("ignorewords.p", "wb"))
 
 if __name__ == "__main__":
-    with Classifier() as c:
-        c.prune()
+    if raw_input("Reset classifications? ").lower == "y":
+        os.system("mv keywords.p .keywords.p")
+        os.system("mv ignorewords.p .ignorewords.p")
+        print "Classification files hidden."
