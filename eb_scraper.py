@@ -155,11 +155,10 @@ def scrape_topic(entry, classifier = None, gen_thumbs = False):
                 break;
         if img_src == None:
             print "   Could not find an image."
-            return
-
-        # Define a name for the image, keeping the extension.
-        img_name = ("%s/%s.%s" % (os.getcwd(), entry.topic_id, \
-                                  img_src.split(".")[-1])).encode('utf-8')
+        else:
+            # Define a name for the image, keeping the extension.
+            img_name = ("%s/%s.%s" % (os.getcwd(), entry.topic_id, \
+                                      img_src.split(".")[-1])).encode('utf-8')
 
         # Download and open the image.
         try:
@@ -167,8 +166,19 @@ def scrape_topic(entry, classifier = None, gen_thumbs = False):
             img = Image.open(img_name)
             print "   Downloaded %s." % filename
         except:
-            print "   Could not download or open image."
-            return ("", category)
+            # If the image was invalid, ask if the user wants to specify an
+            # image.
+            while True:
+                again = raw_input("   Could not download or open image. " \
+                                  + "Specify a manually-downloaded image? ")
+                if again != "y":
+                    return 
+                img_name = raw_input("   Filename: ")
+                try:
+                    img = Image.open(img_name)
+                    break
+                except:
+                    continue
 
         # Crop the image to a centered square and resize.
         if img.size[0] > img.size[1]:
