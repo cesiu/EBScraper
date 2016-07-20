@@ -22,19 +22,25 @@ non-emoticon image it finds in those topics, generates thumbnails, and saves
 the topic name, URL, author, and image URL.
 
 Usage: `pypy eb_scraper.py [page min] [page max] <options>`
+
 Options:
 - -i - Generate a thumbnail and upload it to imgur.
 - -c - Automatically classify MOCs instead of asking for confirmation.
 - -m - Include topics listed as mods but not MOCs.
+
+
 
 **renderer.py** takes the information saved by `eb_scraper`, translates it into
 BBCode, and posts it to a topic on EB (using credentials provided in an
 external file).
 
 Usage: `pypy renderer.py <options>`
+
 Options:
 - -u - Upload the rendered BBCode to specified EB posts.
 - -d - Dev mode. Run the renderer even if the entries have no image URLs.
+
+
 
 **classifier.py** is an experimental class that uses some very simple machine
 learning to attempt to figure out how to classify an MOC (the Star Wars era it
