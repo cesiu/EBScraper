@@ -20,7 +20,8 @@ Wars forum. It identifies all topics it thinks are MOCs that are ready for
 indexing (i.e., not WIPs and not already indexed), downloads the first 
 non-emoticon image it finds in those topics, generates thumbnails, and saves 
 the topic name, URL, author, and image URL.
-Usage: `pypy eb_scraper.py [page min] [page max] <options>
+
+Usage: `pypy eb_scraper.py [page min] [page max] <options>`
 Options:
 - -i - Generate a thumbnail and upload it to imgur.
 - -c - Automatically classify MOCs instead of asking for confirmation.
@@ -29,7 +30,8 @@ Options:
 **renderer.py** takes the information saved by `eb_scraper`, translates it into
 BBCode, and posts it to a topic on EB (using credentials provided in an
 external file).
-Usage: `pypy renderer.py <options>
+
+Usage: `pypy renderer.py <options>`
 Options:
 - -u - Upload the rendered BBCode to specified EB posts.
 - -d - Dev mode. Run the renderer even if the entries have no image URLs.
