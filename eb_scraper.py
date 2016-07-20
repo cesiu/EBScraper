@@ -22,6 +22,12 @@ except:
 BASE_URL = "http://www.eurobricks.com/forum/index.php"
 # The number of topics per page.
 NUM_TOPICS = 30
+# Maps the subforum names to their id numbers.
+SUBFORUM_IDS = {
+    "StarWars": "86",
+    "WattosJunkyard": "114",
+    "NarEurbrikka": "175",
+}
 
 # Represents one entry in an index.
 class IndexEntry:
@@ -33,13 +39,6 @@ class IndexEntry:
         self.category = "unknown"
 
 def main():
-    # Maps the subforum names to their id numbers.
-    SUBFORUM_IDS = {
-        "StarWars": "86",
-        "WattosJunkyard": "114",
-        "NarEurbrikka": "175",
-    }
-
     # Get the range from the args.
     if len(argv) < 3:
         err_exit()

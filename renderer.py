@@ -2,7 +2,7 @@
 # author: Christopher (cesiu)
 # version: 0.2
 
-from eb_scraper import IndexEntry
+from eb_scraper import IndexEntry, BASE_URL
 from classifier import CLASSES
 from sys import argv, exit
 import urllib2
@@ -17,14 +17,19 @@ try:
 except:
     print "Selenium not installed."
 
+# Maps the entry categories to the posts that they're currently being added to.
+POST_IDS = {"OTveh":"0000001", "OTloc":"0000002", "OTchr":"0000003", \
+            "OTmin":"0000004", "PTveh":"0000005", "PTloc":"0000006", \
+            "PTchr":"0000007", "PTmin":"0000008", "STveh":"0000009", \
+            "STloc":"0000010", "STchr":"0000011", "STmin":"0000012", \
+            "CWveh":"0000013", "CWloc":"0000014", "CWchr":"0000015", \
+            "CWmin":"0000016", "EUveh":"0000017", "EUloc":"0000018", \
+            "EUchr":"0000019", "EUmin":"0000020", "NCveh":"0000021", \
+            "NCloc":"0000022", "NCchr":"0000023", "NCmin":"0000024", \
+            "SPall":"0000025"}
+
 def main():
     if "to_render.p" in os.listdir(os.getcwd()):
-        base_url = "http://www.eurobricks.com/forum/index.php?showtopic="
-        # Map the entry categories to the posts that they're currently being
-        # added to.
-        post_ids = {"OT":"2612377", "PT":"2612386", "ST":"2613058", \
-                    "EU":"2613068", "CW":"2613077", "OR":"2613085", \
-                    "NC":"2613095"}
         # Initialize empty strings for the new contents of each post.
         sections = dict([(key, "") for key in CLASSES])
         successes = []
@@ -34,7 +39,7 @@ def main():
 
         # Check that we have all the necessary post ids.
         for key in CLASSES:
-            if not key in post_ids:
+            if not key in POST_IDS:
                 print "Post id not found for %s." % key
                 exit()
 
@@ -42,10 +47,11 @@ def main():
         # indexed.
         for key, entry in entries.iteritems():
             if (entry.img_url or "-d" in argv) and entry.category != "NA":
-                sections[entry.category] += ("\n\n[url=\"%s%s\"][img]%s[/img]" \
-                 + "[/url] [url=\"%s%s\"][i]%s[/i][/url], by %s") \
-                 % (base_url, entry.topic_id, entry.img_url, base_url, \
-                 entry.topic_id, entry.title, entry.author)
+                sections[entry.category] += ("\n\n[url=\"%s?showtopic=%s\"]" \
+                 + "[img]%s[/img][/url] [url=\"%s?showtopic=%s\"][i]%s[/i]" \
+                 + "[/url], by %s") % (BASE_URL, entry.topic_id, \
+                 entry.img_url, BASE_URL, entry.topic_id, entry.title, \
+                 entry.author)
 
         # Dump the render results to stdout.
         for key in CLASSES:
@@ -88,7 +94,7 @@ def main():
                     if sections[category]:
                         # Edit the appropriate post and add the entries.
                         try:
-                            edit_post(browser, post_ids[category], \
+                            edit_post(browser, POST_IDS[category], \
                                       sections[category])
                             successes.append(category)
                         except:

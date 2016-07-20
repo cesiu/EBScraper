@@ -8,7 +8,13 @@ import string
 import pickle
 import os
 
-CLASSES = ["OT", "PT", "CW", "EU", "ST", "OR", "NC"]
+CLASSES = ["OTveh", "OTloc", "OTchr", "OTmin", \
+           "PTveh", "PTloc", "PTchr", "PTmin", \
+           "STveh", "STloc", "STchr", "STmin", \
+           "CWveh", "CWloc", "CWchr", "CWmin", \
+           "EUveh", "EUloc", "EUchr", "EUmin", \
+           "NCveh", "NCloc", "NCchr", "NCmin", \
+           "SPall"]
 
 # Represents one token and how often its used for each classification.
 class Keyword:
@@ -96,7 +102,7 @@ class Classifier:
 
         if not self.auto:
             if raw_input("   %s? " % result) != "y":
-                result = raw_input("   Correction: ").upper()
+                result = raw_input("   Correction: ")
 
             # Update the frequencies once we know the correct classification.
             if result in CLASSES:
