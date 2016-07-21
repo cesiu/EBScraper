@@ -2,7 +2,7 @@
 # author: Christopher (cesiu)
 # version: 0.2
 
-from sys import argv
+from sys import argv, stderr
 from re import sub
 import string
 import pickle
@@ -16,11 +16,15 @@ CLASSES = ["OTveh", "OTloc", "OTchr", "OTmin", \
            "NCveh", "NCloc", "NCchr", "NCmin", \
            "SPall"]
 
+ERAS = ["OT", "PT", "ST", "EU", "CW", "NC", "SP"]
+TYPES = ["veh", "loc", "chr", "min", "all"]
+
 # Represents one token and how often its used for each classification.
 class Keyword:
     def __init__(self, token):
         self.token = token
-        self.frequencies = dict([(key, 0) for key in CLASSES])
+        self.era_freqs = dict([(key, 0) for key in ERAS])
+        self.type_freqs = dict([(key, 0) for key in TYPES])
 
 # Contains the classification function so that the saved keywords are only
 # loaded once and always saved when done.
@@ -79,7 +83,8 @@ class Classifier:
     # returns the classification, a string
     def check(self, text):
         # A text block is initially equally likely to be of any classification.
-        guess = dict([(key, 0) for key in CLASSES])
+        era_guess = dict([(key, 0) for key in ERAS])
+        type_guess = dict([(key, 0) for key in TYPES])
 
         # For each word in the block: 
         for token in text.split():
@@ -89,40 +94,59 @@ class Classifier:
                 # If we've seen the word before, note how often it's used for
                 # each classification.
                 if token in self.keywords:
-                    for classification, frequency \
-                        in self.keywords[token].frequencies.iteritems():
-                        guess[classification] += frequency
+                    for moc_era, frequency \
+                        in self.keywords[token].era_freqs.iteritems():
+                        era_guess[moc_era] += frequency
+                    for moc_type, frequency \
+                        in self.keywords[token].type_freqs.iteritems():
+                        type_guess[moc_type] += frequency
                 # Else add a new object for it to the keyword dict. 
                 else:
                     self.keywords[token] = Keyword(token)
         
         # Guess which classification most likely applies to the text block and
         # ask the user to confirm or correct.
-        result = max(guess, key=guess.get)
+        era_res = max(era_guess, key = era_guess.get) 
+        type_res = max(type_guess, key = type_guess.get)
+        result = era_res + type_res
 
         if not self.auto:
+            # If the guess was incorrect, get the correction and split it into
+            # era and type.
             if raw_input("   %s? " % result) != "y":
                 correction = raw_input("   Correction: ")
+                era_cor = correction[:2]
+                type_cor = correction[2:]
 
                 # Update the frequencies now that we know the correct 
                 # classification, unless the user wants to ignore the topic.
-                if correction != result: 
-                    result = correction
-                    if result in CLASSES:
-                        for token in text.split():
-                            token = sub("[\[\]().,:!'\";-]", '', token.lower())
-                            if self.is_significant(token):
-                                self.keywords[token].frequencies[result] += 1
-                        print "   Updating frequencies."
-                    elif result == "NA":
-                        print "   Ignoring topic."
-                    # If the user made a typo, stick the topic in the misc
-                    # category so it can be manually indexed later.
-                    else:
-                        print "   Invalid classification. Setting to \"SPall\"."
-                        result = "SPall"
-                else:
+                if correction == result:
                     print "   No change."
+                elif correction == "ignore":
+                    print "   Ignoring topic."
+                    result = "NA"
+                elif correction in CLASSES:
+                    result = correction
+                    if era_cor != era_res:
+                        if type_cor != type_res:
+                            print "   Updating era and type."
+                        else:
+                            print "   Updating era."
+                    else:
+                        print "   Updating type."
+
+                    for token in text.split():
+                        token = sub("[\[\]().,:!'\";-]", '', token.lower())
+                        if self.is_significant(token):
+                            if era_cor != era_res:
+                                self.keywords[token].era_freqs[era_cor] += 1
+                            if type_cor != type_res:
+                                self.keywords[token].type_freqs[type_cor] += 1
+                # If the user made a typo, stick the topic in the misc
+                # category so it can be manually indexed later.
+                else:
+                    print "   Invalid classification. Setting to \"SPall\"."
+                    result = "SPall"
         else:
             print "   Classified as %s." % result
 
@@ -136,26 +160,31 @@ class Classifier:
         
         # Fetch the frequencies of each token.
         for token, frequencies in self.keywords.iteritems():
-            values = frequencies.frequencies.values()
+            era_values = frequencies.era_freqs.values()
+            type_values = frequencies.type_freqs.values()
+
             # If there are more than three non-zero values, don't consider the
             # zeroes. (ignore outliers) (I made up this metric by eyeballing
             # values...)
-            while 0 < values.count(0) < 4:
-                values.remove(0)
+            while 0 < era_values.count(0) < 4:
+                era_values.remove(0)
+            while 0 < type_values.count(0) < 2:
+                type_values.remove(0)
 
             # If the variance is less than a quarter of the sum (I made up this
             # metric, too!), remove the token (assume it's just generally 
             # common among all topics). 
-            mean = float(sum(values)) / len(values)
-            variance = float(sum([(value - mean) ** 2 for value in values])) \
-                       / len(values)
-            if variance < float(sum(values)) / 4:
+            era_mean = float(sum(era_values)) / len(era_values)
+            type_mean = float(sum(type_values)) / len(type_values)
+            era_variance = float(sum([(value - era_mean) ** 2 \
+                           for value in era_values])) / len(era_values)
+            type_variance = float(sum([(value - type_mean) ** 2 \
+                            for value in type_values])) / len(type_values)
+
+            if era_variance < float(sum(era_values)) / 4 \
+               and type_variance < float(sum(type_values)) / 4:
+                stderr.write("Removed %s.\n" % token)
                 del ret_dict[token]
-                # If, additionally, the token has been seen too often, ignore
-                # it from now on. 
-                if sum(values) > 200:
-                    if raw_input("Blacklist %s? " % token) == "y":
-                        self.blacklist[token] = True
         return ret_dict
 
     def __exit__(self, exc_type, exc_value, traceback):
