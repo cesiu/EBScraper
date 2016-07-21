@@ -16,17 +16,17 @@ which is an OS X C++ program.
 
 ######Use######
 **eb_scraper.py** scans the first page (the first thirty topics) of EB's Star
-Wars forum. It identifies all topics it thinks are MOCs that are ready for
-indexing (i.e., not WIPs and not already indexed), downloads the first 
-non-emoticon image it finds in those topics, generates thumbnails, and saves 
-the topic name, URL, author, and image URL.
+Wars forum. It identifies all topics it thinks are LEGO creations that are 
+ready for indexing (i.e., not works-in-progress and not already indexed), 
+downloads the first non-emoticon image it finds in those topics, generates 
+thumbnails, and saves the topic name, URL, author, and image URL.
 
 Usage: `pypy eb_scraper.py [page min] [page max] <options>`
 
 Options:
 - -i - Generate a thumbnail and upload it to imgur.
-- -c - Automatically classify MOCs instead of asking for confirmation.
-- -m - Include topics listed as mods but not MOCs.
+- -c - Automatically classify creations instead of asking for confirmation.
+- -m - Include topics listed as modifications of LEGO sets.
 
 
 
@@ -43,7 +43,8 @@ Options:
 
 
 **classifier.py** is an experimental class that uses some very simple machine
-learning to attempt to figure out how to classify an MOC (the Star Wars era it
-pertains to, in this case). The classifier is used by the scraper, not as a
-standalone program. `pypy classifier.py` will give the option of resetting the
-saved classification data.
+learning to attempt to figure out how to classify a creation by determining the 
+Star Wars era (Original Trilogy, Expanded Universe, etc.) and the type 
+(vehicle, diorama, etc.) it pertains to. The classifier is used by the scraper, 
+not as a standalone program. `pypy classifier.py` will give the option of 
+resetting the saved classification data.
