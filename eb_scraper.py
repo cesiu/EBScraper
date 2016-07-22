@@ -163,7 +163,8 @@ def scrape_topic(entry, classifier = None, gen_thumbs = False):
         try:
             (filename, header) = urllib.urlretrieve(img_src, img_name)
             img = Image.open(img_name)
-            print "   Downloaded %s." % filename
+            if raw_input("   Downloaded %s. Okay? " % filename) != "y":
+                raise Exception("Bad image!")
         except:
             # If the image was invalid, ask if the user wants to specify an
             # image.
