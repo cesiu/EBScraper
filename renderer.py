@@ -18,15 +18,15 @@ except:
     print "Selenium not installed."
 
 # Maps the entry categories to the posts that they're currently being added to.
-POST_IDS = {"OTveh":"0000001", "OTloc":"0000002", "OTchr":"0000003", \
-            "OTmin":"0000004", "PTveh":"0000005", "PTloc":"0000006", \
-            "PTchr":"0000007", "PTmin":"0000008", "STveh":"0000009", \
-            "STloc":"0000010", "STchr":"0000011", "STmin":"0000012", \
-            "CWveh":"0000013", "CWloc":"0000014", "CWchr":"0000015", \
-            "CWmin":"0000016", "EUveh":"0000017", "EUloc":"0000018", \
-            "EUchr":"0000019", "EUmin":"0000020", "NCveh":"0000021", \
-            "NCloc":"0000022", "NCchr":"0000023", "NCmin":"0000024", \
-            "SPall":"0000025"}
+POST_IDS = {"OTveh":"2617870", "OTloc":"2617873", "OTchr":"2617876", \
+            "OTmin":"2617878", "PTveh":"2617880", "PTloc":"2617882", \
+            "PTchr":"2617885", "PTmin":"2617887", "STveh":"2617889", \
+            "STloc":"2617891", "STchr":"2617893", "STmin":"2617895", \
+            "EUveh":"2617897", "EUloc":"2617899", "EUchr":"2617901", \
+            "EUmin":"2617904", "CWveh":"2617906", "CWloc":"2617908", \
+            "CWchr":"2617910", "CWmin":"2617912", "NCveh":"2617914", \
+            "NCloc":"2617917", "NCchr":"2617917", "NCmin":"2617914", \
+            "SPall":"2617924"}
 
 def main():
     # Check for options.
@@ -92,7 +92,7 @@ def main():
 
                 # Go to the index topic.
                 browser.find_element_by_xpath("//a[@href='http://" \
-                 + "www.eurobricks.com/forum/index.php?showtopic=137557']") \
+                 + "www.eurobricks.com/forum/index.php?showtopic=137853']") \
                  .click()
 
                 # For every category that has new entries:
@@ -120,7 +120,7 @@ def main():
                     log_msg += "no failures."
 
                 # Add the message to the log.
-                edit_post(browser, "2613104", time.strftime("\n[b]%d %B %Y" \
+                edit_post(browser, "2617925", time.strftime("\n[b]%d %B %Y" \
                           + "[/b] at %H:%M:%S, %Z: ") + log_msg)
 
                 # Log out and close the browser.
