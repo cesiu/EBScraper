@@ -149,7 +149,9 @@ def scrape_topic(entry, classifier = None, gen_thumbs = False):
              + "gallery_2351_18_164.gif" and image["src"] \
              != "http://www.brickshelf.com/gallery/KimT/Mixed/EB/indexed.gif" \
              and image["src"] != "http://www.brickshelf" \
-             + ".com/gallery/legowiz23/ebthumbnails/indexed.gif":
+             + ".com/gallery/legowiz23/ebthumbnails/indexed.gif" \
+             and image["src"] != "http://www.eurobricks." \
+             + "com/forum/uploads/1262945452/gallery_101_23_281.gif":
                 img_src = image["src"]
                 break;
         if img_src == None:
