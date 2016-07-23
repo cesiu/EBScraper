@@ -151,7 +151,9 @@ def scrape_topic(entry, classifier = None, gen_thumbs = False):
              and image["src"] != "http://www.brickshelf" \
              + ".com/gallery/legowiz23/ebthumbnails/indexed.gif" \
              and image["src"] != "http://www.eurobricks." \
-             + "com/forum/uploads/1262945452/gallery_101_23_281.gif":
+             + "com/forum/uploads/1262945452/gallery_101_23_281.gif" \
+             and image["src"] != "http://www.eurobricks." \
+             + "com/forum/uploads/1244494708/gallery_101_23_908.jpg":
                 img_src = image["src"]
                 break;
         if img_src == None:
@@ -177,7 +179,7 @@ def scrape_topic(entry, classifier = None, gen_thumbs = False):
                     return 
                 img_name = raw_input("   Filename: ")
                 try:
-                    img = Image.open(img_name)
+                    img = Image.open("%s/%s" % (os.getcwd(), img_name))
                     break
                 except:
                     continue
