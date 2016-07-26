@@ -77,7 +77,7 @@ def main():
                 else:
                     print "%s (%s) by %s needs indexing." \
                            % (entry.title, entry.topic_id, entry.author)
-                    scrape_topic(entry, classifier, "i" in opts)
+                    scrape_topic(entry, classifier, "i" in opts, "c" in opts)
                     old_entries[entry.topic_id] = True
                     new_entries[entry.topic_id] = entry
 
@@ -123,7 +123,8 @@ def scrape_forum_page(url, include_mods = False):
 # entry - an IndexEntry for the topic
 # classifier - the optional classifier to use on the topic
 # gen_thumbs - whether or not to generate thumbnails
-def scrape_topic(entry, classifier = None, gen_thumbs = False):
+# auto - if true, don't ask the user to verify images
+def scrape_topic(entry, classifier = None, gen_thumbs = False, auto = False):
     # Load the page and initialize the parser.
     page = urllib2.urlopen("%s?showtopic=%s" % (BASE_URL, entry.topic_id))
     soup = BeautifulSoup(page.read())
@@ -167,12 +168,13 @@ def scrape_topic(entry, classifier = None, gen_thumbs = False):
         try:
             (filename, header) = urllib.urlretrieve(img_src, img_name)
             img = Image.open(img_name)
-            if raw_input("   Downloaded %s. Okay? " % filename) != "y":
+            if not auto and raw_input("   Downloaded %s. Okay? " % filename) \
+             != "y":
                 raise Exception("Bad image!")
         except:
             # If the image was invalid, ask if the user wants to specify an
             # image.
-            while True:
+            while not auto:
                 again = raw_input("   Could not download or open image. " \
                                   + "Specify a manually-downloaded image? ")
                 if again != "y":
