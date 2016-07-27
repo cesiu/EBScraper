@@ -87,7 +87,7 @@ class Classifier:
         type_guess = dict([(key, 0) for key in TYPES])
 
         # For each word in the block: 
-        for token in list(set(text.split())):
+        for token in set(text.split()):
             token = sub("[\[\]().,:!'\";-]", '', token.lower())
             # Ignore short and common words.
             if self.is_significant(token):
