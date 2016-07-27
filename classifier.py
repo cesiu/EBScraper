@@ -83,8 +83,8 @@ class Classifier:
     # returns the classification, a string
     def check(self, text):
         # A text block is initially equally likely to be of any classification.
-        era_guess = dict([(key, 0) for key in ERAS])
-        type_guess = dict([(key, 0) for key in TYPES])
+        era_guess = dict([(key, 1) for key in ERAS])
+        type_guess = dict([(key, 1) for key in TYPES])
 
         # For each word in the block: 
         for token in set(text.split()):
@@ -96,10 +96,10 @@ class Classifier:
                 if token in self.keywords:
                     for moc_era, frequency \
                         in self.keywords[token].era_freqs.iteritems():
-                        era_guess[moc_era] += frequency
+                        era_guess[moc_era] *= max(1, frequency)
                     for moc_type, frequency \
                         in self.keywords[token].type_freqs.iteritems():
-                        type_guess[moc_type] += frequency
+                        type_guess[moc_type] *= max(1, frequency)
                 # Else add a new object for it to the keyword dict. 
                 else:
                     self.keywords[token] = Keyword(token)
