@@ -42,9 +42,9 @@ Options:
 
 
 
-**classifier.py** is an experimental class that uses some very simple machine
-learning to attempt to figure out how to classify a creation by determining the 
-Star Wars era (Original Trilogy, Expanded Universe, etc.) and the type 
-(vehicle, diorama, etc.) it pertains to. The classifier is used by the scraper, 
-not as a standalone program. `pypy classifier.py` will give the option of 
-resetting the saved classification data.
+**classifier.py** is an experimental class that uses something akin to two
+passes of a Naive Bayes algorithm to attempt to determine the Star Wars era 
+(Original Trilogy, Expanded Universe, etc.) and the type (vehicle, diorama, 
+etc.) it pertains to. The classifier is used by the scraper, not as a 
+standalone program. `pypy classifier.py` will give the option of resetting the 
+saved classification data.
