@@ -26,6 +26,7 @@ Usage: `pypy eb_scraper.py [page min] [page max] <options>`
 Options:
 - -i - Generate a thumbnail and upload it to imgur.
 - -c - Automatically classify creations instead of asking for confirmation.
+Don't ask for confirmation that images are good.
 - -m - Include topics listed as modifications of LEGO sets.
 
 
